@@ -1,10 +1,10 @@
 'use client';
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
 import {
   Activity,
   AlertTriangle,
   CalendarDays,
-  CheckCircle2,
   ChevronRight,
   ClipboardList,
   Clock3,
@@ -100,13 +100,18 @@ export default function Home() {
           <button className="p-2 md:hidden" onClick={() => setDrawer(true)}>
             <Menu size={20} />
           </button>
-          <span className="grid size-9 place-items-center rounded-xl bg-[#197365] text-white">
-            <CheckCircle2 size={19} />
-          </span>
+          <Image
+            src="/brand/care-d-clinic-logo.png"
+            alt="Care D Clinic"
+            width={44}
+            height={44}
+            className="size-11 rounded-xl object-contain"
+            priority
+          />
           <div>
-            <b className="block text-sm">Vela Clinic</b>
+            <b className="block text-sm">Care D Clinic</b>
             <span className="text-[10px] text-[#6a7d75]">
-              Asia/Bangkok · เก็บเวลา UTC
+              ศูนย์หลอดเลือดฟอกไต · One Day Surgery
             </span>
           </div>
         </div>
@@ -176,7 +181,7 @@ export default function Home() {
               appointment={() => setModal('appointment')}
               reassign={() => {
                 update({
-                  nurse: selected.nurse === 'พญ.กานต์' ? 'พญ.ภูมิ' : 'พญ.กานต์',
+                  nurse: selected.nurse === 'พยาบาลวิภา' ? 'พยาบาลณิชา' : 'พยาบาลวิภา',
                   status: 'Awaiting nurse call',
                 });
                 log('มุก มอบหมายพยาบาลใหม่');
@@ -218,11 +223,11 @@ export default function Home() {
           save={(a) => {
             update({
               status: a ? 'Appointment scheduled' : 'Follow-up active',
-              task: a ? 'Day 1 · ยืนยันหลังรับบริการ' : 'Day 7 · โทรติดตามผล',
+              task: a ? 'Day 1 · ยืนยันหลังหัตถการ' : 'Day 7 · โทรติดตามแผล',
               due: '18 ก.ย. 2026 10:00',
               dueState: 'upcoming',
             });
-            log('มายด์ บันทึกผลแทน พญ.กานต์ · ติดต่อทาง Phone');
+            log('มายด์ บันทึกผลแทน พยาบาลวิภา · ติดต่อทาง Phone');
             setModal(a ? 'appointment' : null);
           }}
         />
@@ -309,12 +314,12 @@ function Heading({
   add: () => void;
 }) {
   const t: Record<View, [string, string]> = {
-    queue: ['คิวงานติดตาม', 'งานเกินกำหนด วันนี้ และงานที่กำลังจะมาถึง'],
+    queue: ['คิวงานประสานการดูแล', 'งานเกินกำหนด วันนี้ และงานที่กำลังจะมาถึง'],
     patients: ['ลีด / ผู้ป่วย', 'ค้นหาผู้ป่วยก่อน แล้วเปิดหรือสร้างเคสที่เกี่ยวข้อง'],
     cases: ['รายละเอียดเคส', 'ข้อมูลผู้ป่วย ประวัติการติดตาม และการดำเนินการ'],
-    appointments: ['นัดหมาย', 'สถานะนัดหมายแยกจากสถานะเคส'],
+    appointments: ['นัดหมาย', 'ประเมินและหัตถการแยกสถานะออกจากเคส'],
     calendar: ['ปฏิทินงาน', 'นัดหมายและงานติดตามในมุมมองเดียวกัน'],
-    dashboard: ['ภาพรวมการดำเนินงาน', 'ข้อมูลสรุปไม่แสดงข้อมูลอ่อนไหว'],
+    dashboard: ['ภาพรวมการประสานการดูแล', 'ข้อมูลสรุปไม่แสดงข้อมูลอ่อนไหว'],
     settings: ['ตั้งค่า Phase 1', 'ตั้งค่าเฉพาะงานในอนาคต'],
     audit: ['ประวัติการตรวจสอบ', 'กิจกรรมสำคัญและ privileged corrections'],
   };
@@ -716,13 +721,13 @@ function Settings() {
         </div>
         <p className="mt-4 rounded-lg bg-[#fff4e1] p-3 text-xs text-[#8a5a19]">
           <AlertTriangle className="mr-1 inline" size={14} />
-          Standard v1 เป็น snapshot: task เดิมไม่เปลี่ยน
+          แผนมาตรฐานเป็น snapshot: task เดิมไม่เปลี่ยน
         </p>
       </section>
       <section className="rounded-2xl border border-[#dce6e0] bg-white p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-semibold">โปรแกรม / คอร์ส และแผนติดตาม</h2>
+            <h2 className="font-semibold">บริการทางคลินิกและแผนติดตาม</h2>
             <p className="mt-1 text-xs text-[#71847b]">
               แต่ละบริการมี default plan ของตนเอง; เปลี่ยนได้เฉพาะเคสใหม่
             </p>
@@ -753,7 +758,7 @@ function Settings() {
           <Info l="บทบาท" v="Admin, Nurse, Manager, System administrator" />
           <Info
             l="รูปแบบเลขเคส"
-            v="CL-{sequence} · ระบบสร้างอัตโนมัติ · แก้ไขเลขที่สร้างแล้วไม่ได้"
+            v="CD-{sequence} · ระบบสร้างอัตโนมัติ · แก้ไขเลขที่สร้างแล้วไม่ได้"
           />
           <Info
             l="Integration readiness"
@@ -766,8 +771,8 @@ function Settings() {
 }
 function Audit() {
   const rows = [
-    'มายด์ · สร้างเคส CL-24092 จาก LINE OA',
-    'มุก · บันทึกผลแทน พญ.กานต์ · performed_at 10:05',
+    'มายด์ · สร้างเคส CD-24092 จาก LINE OA',
+    'มุก · บันทึกผลแทน พยาบาลวิภา · performed_at 10:05',
     'มุก · เปลี่ยน nurse assignment พร้อมเหตุผล',
     'เจ้าของคลินิก · แก้ Standard plan สำหรับเคสใหม่',
   ];
@@ -809,7 +814,7 @@ function NewLead({
     serviceCatalog.find((item) => item.name === service) ?? serviceCatalog[0];
   const done = () =>
     save({
-      id: 'CL-24101',
+      id: 'CD-24101',
       initials: (name || 'ลส').slice(0, 2),
       name: name || 'ลูกค้าตัวอย่าง',
       phone,
@@ -817,7 +822,7 @@ function NewLead({
       source,
       status: 'Awaiting nurse call',
       priority: 'Normal',
-      nurse: 'พญ.กานต์',
+      nurse: 'พยาบาลวิภา',
       owner: 'มายด์',
       task: 'โทรประเมินเบื้องต้น',
       due: 'วันนี้ ก่อน 17:00',
@@ -858,7 +863,7 @@ function NewLead({
                 พบข้อมูลซ้ำที่เป็นไปได้
               </b>
               <p className="mt-1 text-xs">
-                ตรงกับ นลินี ศรีสุข (CL-24091) — ระบบไม่ merge อัตโนมัติ
+                ตรงกับ นลินี ศรีสุข (CD-24091) — ระบบไม่ merge อัตโนมัติ
               </p>
               <div className="mt-3 flex gap-2">
                 <button className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-[#197365]">
@@ -902,7 +907,7 @@ function NewLead({
           </label>
           <div className="grid grid-cols-2 gap-3">
             <Select l="Priority" values={['Normal', 'High', 'Urgent']} />
-            <Select l="พยาบาล" values={['พญ.กานต์', 'พญ.ภูมิ']} />
+            <Select l="พยาบาล" values={['พยาบาลวิภา', 'พยาบาลณิชา']} />
           </div>
         </div>
       ) : (
@@ -973,7 +978,7 @@ function Result({
           เวลาที่ติดต่อจริง
           <input className={field} defaultValue="11 ก.ย. 2026 10:05" />
         </label>
-        <Select l="ผู้ปฏิบัติ/ผู้รายงาน" values={['พญ.กานต์', 'พญ.ภูมิ']} />
+        <Select l="ผู้ปฏิบัติ/ผู้รายงาน" values={['พยาบาลวิภา', 'พยาบาลณิชา']} />
       </div>
       <label className="mt-3 block text-sm font-medium">
         สรุปผล
@@ -983,7 +988,7 @@ function Result({
         />
       </label>
       <div className="mt-3 rounded-lg bg-[#eaf6f1] p-3 text-xs text-[#246656]">
-        <b>บันทึกแทนพยาบาล:</b> performed/reported by พญ.กานต์ · recorded by มายด์ ·
+        <b>บันทึกแทนพยาบาล:</b> performed/reported by พยาบาลวิภา · recorded by มายด์ ·
         recorded at 11 ก.ย. 2026 10:15
       </div>
       <label className="mt-3 flex gap-2 text-sm">
@@ -1042,7 +1047,7 @@ function Appointment({
         />
         <Select
           l="สาขา / Provider"
-          values={['สุขุมวิท · พญ.กานต์', 'อโศก · พญ.ภูมิ']}
+          values={['Care D Clinic · พยาบาลวิภา', 'Care D Clinic · พยาบาลณิชา']}
         />
       </div>
       <div className="mt-4 rounded-lg bg-[#f5faf7] p-3 text-xs">
