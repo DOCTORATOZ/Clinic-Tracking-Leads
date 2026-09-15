@@ -81,6 +81,13 @@ export default function Home() {
         ),
     [items, filter, query],
   );
+  const nextMockCaseNumber = useMemo(() => {
+    const latest = items.reduce((highest, item) => {
+      const sequence = Number(item.id.match(/(\d+)$/)?.[1] ?? 0);
+      return Math.max(highest, sequence);
+    }, 24090);
+    return `CD-${String(latest + 1).padStart(5, '0')}`;
+  }, [items]);
   const choose = (x: Case) => {
     setSelected(x);
     setView('cases');
@@ -206,6 +213,7 @@ export default function Home() {
       </div>
       {modal === 'new' && (
         <NewLead
+          caseNumber={nextMockCaseNumber}
           close={() => setModal(null)}
           save={(x) => {
             setItems((xs) => [x, ...xs]);
@@ -400,9 +408,9 @@ function Queue({
           </label>
         </div>
         <div className="mt-4 overflow-hidden rounded-xl border border-[#e0e9e4]">
-          {items.map((x) => (
+          {items.map((x, index) => (
             <button
-              key={x.id}
+              key={`${x.id}-${index}`}
               onClick={() => choose(x)}
               className="grid w-full gap-3 border-b border-[#e8eeea] px-4 py-4 text-left last:border-0 hover:bg-[#f7fbf9] md:grid-cols-[1.2fr_.8fr_.7fr_.8fr_.4fr]"
             >
@@ -684,6 +692,29 @@ function Dashboard() {
           </p>
         </section>
       </div>
+      <section className="mt-5 rounded-2xl border border-[#dce6e0] bg-white p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="font-semibold">แจ้งเตือนภายในทีม</h2>
+            <p className="mt-1 text-xs text-[#71847b]">
+              สำหรับติดตามงานและข้อยกเว้นเท่านั้น — ไม่ส่งข้อความถึงผู้ป่วย
+            </p>
+          </div>
+          <Badge>3 รายการ</Badge>
+        </div>
+        <div className="mt-4 grid gap-2 md:grid-cols-3">
+          {[
+            ['งานติดตามเกินกำหนด', 'CD-24091 · โทรติดตามแผลหลังผ่าตัด'],
+            ['นัดหมายวันนี้', 'CD-24093 · ประเมินเส้นฟอกไต 16:30'],
+            ['Calendar ต้องตรวจสอบ', 'Google Calendar มีการแก้ไขจากภายนอก'],
+          ].map(([title, detail]) => (
+            <div key={title} className="rounded-xl bg-[#f5faf7] p-3">
+              <b className="block text-sm text-[#19312c]">{title}</b>
+              <span className="mt-1 block text-xs text-[#71847b]">{detail}</span>
+            </div>
+          ))}
+        </div>
+      </section>
     </>
   );
 }
@@ -798,9 +829,11 @@ function Audit() {
   );
 }
 function NewLead({
+  caseNumber,
   close,
   save,
 }: {
+  caseNumber: string;
   close: () => void;
   save: (x: Case) => void;
 }) {
@@ -808,13 +841,14 @@ function NewLead({
     [name, setName] = useState(''),
     [phone, setPhone] = useState('081-555-0192'),
     [source, setSource] = useState('Facebook'),
-    [service, setService] = useState(serviceCatalog[0].name);
+    [service, setService] = useState(serviceCatalog[0].name),
+    [careContactConsent, setCareContactConsent] = useState(false);
   const dup = phone.replace(/\D/g, '') === '0815550192';
   const selectedService =
     serviceCatalog.find((item) => item.name === service) ?? serviceCatalog[0];
   const done = () =>
     save({
-      id: 'CD-24101',
+      id: caseNumber,
       initials: (name || 'ลส').slice(0, 2),
       name: name || 'ลูกค้าตัวอย่าง',
       phone,
@@ -878,6 +912,19 @@ function NewLead({
           <p className="text-xs text-[#71847b]">
             HN ไม่บังคับ และมี warning ก่อนบันทึก
           </p>
+          <label className="flex gap-2 rounded-lg bg-[#f5faf7] p-3 text-xs text-[#52665e]">
+            <input
+              type="checkbox"
+              checked={careContactConsent}
+              onChange={(event) => setCareContactConsent(event.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              บันทึกความยินยอมให้คลินิกติดต่อเพื่อประสานการดูแล
+              <br />
+              ไม่ใช่ความยินยอมรับการตลาด และผู้ป่วยสามารถขอไม่ให้ติดต่อได้
+            </span>
+          </label>
         </div>
       ) : step === 2 ? (
         <div className="space-y-3">

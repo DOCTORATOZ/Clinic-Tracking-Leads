@@ -3,6 +3,7 @@ import { createAppointmentSchema, transitionAppointmentSchema, type CreateAppoin
 import type { ClinicContext } from '@/lib/auth/context';
 import { requireRole } from '@/lib/auth/context';
 import { writeAuditEvent } from '@/modules/audit/service';
+import { createOperationalNotification } from '@/modules/notifications/service';
 
 export async function createAppointment(client: SupabaseClient, context: ClinicContext, unsafeInput: CreateAppointmentInput) {
   requireRole(context, ['admin', 'manager']); const input = createAppointmentSchema.parse(unsafeInput);
@@ -10,6 +11,14 @@ export async function createAppointment(client: SupabaseClient, context: ClinicC
   if (error) throw error;
   await client.from('cases').update({ state: 'appointment_scheduled' }).eq('id', input.caseId).eq('clinic_id', context.clinicId);
   await writeAuditEvent(client, context, { entityType: 'appointment', entityId: data.id, action: 'appointment.created', afterData: { caseId: input.caseId, sourceResultId: input.sourceResultId } });
+  await createOperationalNotification(client, context, {
+    recipientUserId: context.userId,
+    kind: 'appointment_due',
+    title: 'สร้างนัดหมายใหม่',
+    body: `นัด ${input.appointmentType} ถูกบันทึกแล้ว`,
+    caseId: input.caseId,
+    appointmentId: data.id,
+  });
   return data;
 }
 

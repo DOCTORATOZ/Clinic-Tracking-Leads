@@ -83,9 +83,9 @@ export function PatientDirectory({
               <p className="text-xs font-semibold text-[#52665e]">
                 Lead / Case ของผู้ป่วย
               </p>
-              {patientCases.map((leadCase) => (
+              {patientCases.map((leadCase, index) => (
                 <button
-                  key={leadCase.id}
+                  key={`${leadCase.id}-${index}`}
                   onClick={() => onOpenCase(leadCase)}
                   className="mt-2 flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left hover:bg-white"
                 >

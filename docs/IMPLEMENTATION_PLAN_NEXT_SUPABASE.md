@@ -12,6 +12,8 @@ as historical prototype context.
   HN normalization, role matrix, retention and consent policy.
 - Create Next.js App Router project structure or a deliberate incremental port
   plan for the existing prototype; retain valuable Thai UI behavior.
+- Confirm Care D service catalogue: vascular access assessment, AVF creation,
+  dialysis catheter care, access intervention and vascular one-day surgery.
 - Create separate Supabase dev and production projects and Vercel environment
   configuration. Never place production credentials in source control.
 - Add migrations, seed data and RLS test strategy for clinics, memberships,
@@ -30,7 +32,8 @@ as historical prototype context.
 
 - Implement Supabase Auth profile/membership/role context and protected routes.
 - Implement patient search/create with optional HN, normalized contact values,
-  consent flags and duplicate warnings.
+  preferred channel, `do_not_contact`, purpose-specific care-contact consent
+  and duplicate warnings.
 - Implement lead creation, source metadata/external-ID placeholders, status,
   priority, owner/nurse assignment and assignment history.
 - Add Zod contracts and transactional domain services with audit entries.
@@ -75,6 +78,8 @@ as historical prototype context.
   contacts and appointments by date/status.
 - Add an in-app day/week/month calendar for appointments and follow-up tasks,
   with linked detail navigation and timezone-aware filtering.
+- Add an internal staff notification inbox for overdue tasks, appointment work
+  and calendar-sync exceptions. It is not patient messaging.
 - Complete accessible Thai labels, loading/empty/error states and responsive
   operation screens.
 
@@ -86,6 +91,8 @@ as historical prototype context.
 - Timeline retains lead, assignment, task, result, appointment and audit
   history with correct actor attribution.
 - A follow-up task and appointment appear exactly once in the in-app calendar.
+- Internal notifications expose work exceptions without leaking symptoms or
+  delivering an outbound message.
 
 ## Milestone 4 — integration-ready safety and release
 
@@ -127,6 +134,10 @@ as historical prototype context.
 3. Patient identity merge/reversal workflow using the preserved merge handoff.
 4. Advanced reporting, marketing attribution, richer clinical workflows and
    operational analytics.
+5. Patient-facing appointment/follow-up reminders, birthday engagement and
+   consent-aware outbound delivery.
+6. Restricted clinical document storage and clinician-approved continuing-care
+   recommendation workflow.
 
 ## Do not build yet
 

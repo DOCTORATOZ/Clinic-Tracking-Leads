@@ -8,6 +8,11 @@ export const createPatientSchema = z.object({
   phone: z.string().trim().max(40).optional(),
   email: z.string().email().optional(),
   birthDate: z.string().date().optional(),
+  preferredContactChannel: z.enum(['phone', 'line_oa', 'facebook', 'tiktok', 'other']).optional(),
+  doNotContact: z.boolean().default(false),
+  careContactConsentAt: z.string().datetime().optional(),
+  // Marketing consent is deliberately not collected by the Phase 1 intake UI.
+  marketingConsentAt: z.string().datetime().optional(),
 });
 
 export const patientMatchSchema = z.object({

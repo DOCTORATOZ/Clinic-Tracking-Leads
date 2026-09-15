@@ -1,7 +1,7 @@
 # Clinic Tracking Leads — Consolidated Requirements
 
 **Status:** Phase 1 implementation baseline  
-**Scope:** internal clinic lead, call handoff, follow-up and appointment operations.
+**Scope:** internal Care D Clinic lead, care-coordination, follow-up and appointment operations for vascular access, dialysis care coordination and one-day surgery. It is not an EMR/EHR or a patient-marketing platform.
 
 ## 1. Product boundary
 
@@ -30,11 +30,15 @@ support integrations without changing core business records.
   and synchronise eligible items to a connected Google Calendar.
 - Search, basic dashboard, audit trail, staff/role/configuration management,
   multi-clinic isolation and duplicate warnings.
+- Internal operational notifications for overdue follow-up, appointment work and
+  calendar-sync exceptions. These are staff-facing only and never send a
+  patient-facing message.
 
 ### Not in Phase 1
 
 - Live Facebook, LINE OA, TikTok, phone/CTI, DAZ, HIS, partner, SMS
-  or outbound messaging integrations.
+  or outbound messaging integrations, including appointment reminders and
+  birthday/engagement messages.
 - Automated messages, chatbot, advanced marketing attribution,
   automatic patient merges, full clinical records, billing, inventory or
   treatment workflows.
@@ -112,6 +116,15 @@ Suggested case states: `new`, `awaiting_nurse_call`, `contact_in_progress`,
   need permission, reason and audit history.
 - Protect sensitive notes by least privilege. Do not expose symptoms or raw
   payloads in broad notifications/dashboard summaries.
+- Store a patient’s preferred contact channel, `do_not_contact` choice and
+  care-contact consent with who/when recorded. Marketing consent is separate,
+  opt-in only and does not imply consent to care contact (or vice versa).
+- Patient-facing reminders, campaigns and birthday messages must not be sent in
+  Phase 1. Internal task notifications do not require or alter marketing
+  consent.
+- A future “recommendation” or re-appointment must be framed as a clinician-
+  approved continuing-care recommendation with a reason and audit record; do
+  not model it as automatic upsell.
 
 ## 5. Initial domain/schema contract
 
@@ -134,6 +147,7 @@ names; final SQL may use singular/plural convention consistently.
 | `follow_up_tasks` | Planned/ad-hoc work: lead, optional step, sequence, scheduled time, snapshot step fields, assignee, lifecycle/status, priority, completion/cancellation metadata. |
 | `follow_up_results` | Contact/assessment attempt: lead, optional task, channel, contacted time, contact status/outcome, symptom status, summary, next action/time, `performed_by`, `reported_by`, `recorded_by`, `recorded_at`. Multiple results per task are allowed. |
 | `appointments` | Patient + lead, optional source result, start/end, type, branch/provider, status, reschedule/cancel reasons, notes. |
+| `operational_notifications` | Staff-only inbox items for overdue task, appointment due, calendar-sync failure or review; recipient, link, read time and no patient-facing delivery payload. |
 | `activities` / `audit_logs` | Append-only actor/action/entity/before-after-safe metadata/time; separate sensitive detail by access policy. |
 | `integration_events` | Inbox/audit for future webhooks/imports: provider, event/message/conversation/account/user IDs, raw restricted payload, hash, idempotency key, processing status/error, resolved entity links and retries. |
 
@@ -168,6 +182,23 @@ provider adapter must:
 
 No adapter, route handler, webhook or queue worker directly inserts/updates a
 lead, result or appointment table.
+
+### 7.1 Care D future scope (explicit roadmap)
+
+- **Channel ingestion:** verified LINE OA/Facebook/other provider webhooks may
+  create an integration inbox event, then follow manual-review and duplicate
+  rules. They must never create a patient or case directly.
+- **Patient-facing messages:** appointment reminders, follow-up messages and
+  birthday engagement require a provider adapter, explicit purpose-specific
+  consent, opt-out, approved templates, quiet-hours policy, delivery log and
+  retry/failure handling.
+- **Documents and clinical records:** referral documents, imaging, operative
+  records and attachments require a separately approved restricted-document
+  module: document type, access role, retention, view/download audit and
+  malware scanning. Do not place clinical documents in general case notes.
+- **Continuing-care recommendations:** any recommendation for a subsequent
+  service or appointment needs a clinician-approved rule/reason and auditable
+  staff action. It is not a sales automation feature.
 
 ## 8. Calendar and Google Calendar synchronisation
 
@@ -224,3 +255,9 @@ tokens are never shown in the normal UI or logs.
     duplicate Google events.
 12. A clinic reschedule/cancellation updates the linked Google event, while an
     external Google edit remains `needs_review` until staff resolves it.
+13. A staff member can see overdue-task, appointment and calendar-sync
+    exceptions in an internal notification inbox without sensitive clinical
+    detail or sending a patient-facing message.
+14. Care-contact consent and `do_not_contact` are visible to authorised staff
+    at intake and are preserved in audit-safe data; marketing consent remains
+    purpose-specific and optional.
