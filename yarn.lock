@@ -305,6 +305,11 @@
   resolved "https://registry.yarnpkg.com/@dotenvx/primitives/-/primitives-0.8.0.tgz#25f3af8f876717deb00b21c64df8a7ba05d16b2c"
   integrity sha512-VYJy0uhFm9zTJ1TxBaW/pA8bjbOM/OttaNMwZ1RHG4JKyRG7DhSdiqD1ipQoAyoD22olUtxbP78W9xY3Wd11bg==
 
+"@ecies/ciphers@^0.2.6":
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/@ecies/ciphers/-/ciphers-0.2.6.tgz#e7cdc4688de3c224e03d479e3227bcece44cbeab"
+  integrity sha512-patgsRPKGkhhoBjETV4XxD0En4ui5fbX0hzayqI3M8tvNMGUoUvmyYAIWwlxBc1KX5cturfqByYdj5bYGRpN9g==
+
 "@emnapi/core@^1.8.1":
   version "1.11.3"
   resolved "https://registry.yarnpkg.com/@emnapi/core/-/core-1.11.3.tgz#5e95348a42cd1e06f0b9aa380cd74091daa4d520"
@@ -628,6 +633,23 @@
   version "16.3.4"
   resolved "https://registry.yarnpkg.com/@next/swc-win32-x64-msvc/-/swc-win32-x64-msvc-16.3.4.tgz#b7b273c56eb723be43b48938e8eb823355ea8852"
   integrity sha512-vvBzwu1pYQCp92maZCFCIw/XgOTMR5tur9GjakwIo2cmwRTMKajRZZDS9+e4KsUZWKu1E007WUeAFXRRjZeuzw==
+
+"@noble/ciphers@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@noble/ciphers/-/ciphers-1.3.0.tgz#f64b8ff886c240e644e5573c097f86e5b43676dc"
+  integrity sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw==
+
+"@noble/curves@^1.9.7":
+  version "1.9.7"
+  resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-1.9.7.tgz#79d04b4758a43e4bca2cbdc62e7771352fa6b951"
+  integrity sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw==
+  dependencies:
+    "@noble/hashes" "1.8.0"
+
+"@noble/hashes@1.8.0", "@noble/hashes@^1.8.0":
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.8.0.tgz#cee43d801fcef9644b11b8194857695acd5f815a"
+  integrity sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -1121,6 +1143,46 @@
   integrity sha512-Cmosty12gyKGK9N3bQb+lMmuAFev5nmUzaR1AsmZHqKOAGzqX1VQzmp49CNPwOx/pw0H9Qqk4rs9yhwTlKpfDg==
   dependencies:
     tslib "2.8.1"
+
+"@supabase/cli-darwin-arm64@2.117.0":
+  version "2.117.0"
+  resolved "https://registry.yarnpkg.com/@supabase/cli-darwin-arm64/-/cli-darwin-arm64-2.117.0.tgz#bffec0a0197b766e775316656584740065ba6d51"
+  integrity sha512-MQVIxL+B5/U9xiXcUtky0vJQ5Qe0qhGkK2JLGwi5BAo5XxcC+iP+KCsVB1/2zzYT+d+fOlZnKyTFFWYO6Ut1sw==
+
+"@supabase/cli-darwin-x64@2.117.0":
+  version "2.117.0"
+  resolved "https://registry.yarnpkg.com/@supabase/cli-darwin-x64/-/cli-darwin-x64-2.117.0.tgz#3da9ab36f9f2dbe9785377423013bf7213db8965"
+  integrity sha512-NMuY3n8Bfe+sPCdrUQQSFkOLFqlQYkg1C0SuqvJG4HVU8ukZ7IH2gy+HFGXNuVitFPapmHTPT8NjbZ+YrunZQw==
+
+"@supabase/cli-linux-arm64-musl@2.117.0":
+  version "2.117.0"
+  resolved "https://registry.yarnpkg.com/@supabase/cli-linux-arm64-musl/-/cli-linux-arm64-musl-2.117.0.tgz#05c2f2a75ee4409bd42aebd8833493b1a877737c"
+  integrity sha512-n5yZuBbBD5MnWqczezH72GAEfdTBHBk9Ei/pgpCnAJtClei9QQsiN1UZNw2A7K1EP4VWxgO/YZr3gFYgFFH1WQ==
+
+"@supabase/cli-linux-arm64@2.117.0":
+  version "2.117.0"
+  resolved "https://registry.yarnpkg.com/@supabase/cli-linux-arm64/-/cli-linux-arm64-2.117.0.tgz#f521fbc9e6ecee24ce505aa7ac0c71b1c0d31e15"
+  integrity sha512-CcMHEB8znY9usMJ2dwAKQV06XIYHzLgnq1KY6HzVT9XmXo0qZxTifC/oWgHX39SmCFm7a3HR4K5J95ysYz+8Hg==
+
+"@supabase/cli-linux-x64-musl@2.117.0":
+  version "2.117.0"
+  resolved "https://registry.yarnpkg.com/@supabase/cli-linux-x64-musl/-/cli-linux-x64-musl-2.117.0.tgz#3eb9734557a2beb4780a223d857d3db2096ea78b"
+  integrity sha512-rlVDN5kXTOe+50wFN7DywFFx956XoYpEJpDkADvZ3k+qL5+7jGxSzQN/7xhHqlhjtSlHfx4QlxajfOerJNnrlg==
+
+"@supabase/cli-linux-x64@2.117.0":
+  version "2.117.0"
+  resolved "https://registry.yarnpkg.com/@supabase/cli-linux-x64/-/cli-linux-x64-2.117.0.tgz#c2367c0e929ff1c3d4d893d15b616e764f66aa89"
+  integrity sha512-qDJEURD/YajKD/OQ91O9XNHB/LHK9V8xZ9qGiUQCFhP9OAvMQjUT12j8k/mgTe4PqIxigGpfvm+eNxRcKnU9Rw==
+
+"@supabase/cli-windows-arm64@2.117.0":
+  version "2.117.0"
+  resolved "https://registry.yarnpkg.com/@supabase/cli-windows-arm64/-/cli-windows-arm64-2.117.0.tgz#203bbfe281b66cbda664fb06b167f54c83de3a1c"
+  integrity sha512-JNjI4dHhogjx1994jNoV9uUMioCrdzfdDJDeq0rZhYEepBGE9W+2gLniBQfQRzGxXK81mg5K3p9CTJYBZzbAKg==
+
+"@supabase/cli-windows-x64@2.117.0":
+  version "2.117.0"
+  resolved "https://registry.yarnpkg.com/@supabase/cli-windows-x64/-/cli-windows-x64-2.117.0.tgz#a8e93b4548c7bd713dd8cf6bca032769d4123bc2"
+  integrity sha512-oFmeLMwgWAyQhzPoR6w+eUOfyJcRMNHN2Ju4BxBtpZ9vW+dO1bAsWd7aVVcpn1sgHA/ptM8U48P+se5yZR7BdQ==
 
 "@supabase/functions-js@2.116.0":
   version "2.116.0"
@@ -1915,6 +1977,16 @@ dunder-proto@^1.0.1:
     es-errors "^1.3.0"
     gopd "^1.2.0"
 
+eciesjs@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/eciesjs/-/eciesjs-0.5.0.tgz#01191700634ec0fdc0925053df3bc7e0359361c1"
+  integrity sha512-s0J9SEVYAEPg7J63GFMApLYzPH9VNIQIyC6s15JpnqVc0TqcKWdbgFlnAweEBRyMmko2dcs2sfC83Hj4J43tuA==
+  dependencies:
+    "@ecies/ciphers" "^0.2.6"
+    "@noble/ciphers" "^1.3.0"
+    "@noble/curves" "^1.9.7"
+    "@noble/hashes" "^1.8.0"
+
 ee-first@1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
@@ -2527,7 +2599,7 @@ jiti@^2.6.1:
   resolved "https://registry.yarnpkg.com/jiti/-/jiti-2.7.0.tgz#974228f2f4ca2bc21885a1797b45fea68e950c64"
   integrity sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==
 
-jose@^6.1.3:
+jose@^6.1.3, jose@^6.2.10:
   version "6.2.12"
   resolved "https://registry.yarnpkg.com/jose/-/jose-6.2.12.tgz#65663e146edd010b98ece83f81737d3aa95fd0d7"
   integrity sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==
@@ -3730,6 +3802,23 @@ styled-jsx@5.1.6:
   integrity sha512-qSVyDTeMotdvQYoHWLNGwRFJHC+i+ZvdBRYosOFgC+Wg1vx4frN2/RG/NA7SYqqvKNLf39P2LSRA2pu6n0XYZA==
   dependencies:
     client-only "0.0.1"
+
+supabase@^2.117.0:
+  version "2.117.0"
+  resolved "https://registry.yarnpkg.com/supabase/-/supabase-2.117.0.tgz#e7b1dbef31ce23079405fea296d905be9d12252c"
+  integrity sha512-V4UDf/kgrqllHbc22vs89bL7pdBj3xhVolvDflByS5FuJb+tXpWhHZxYEbBQspxA0fBzaj+lpiedB72xTAZA4w==
+  dependencies:
+    eciesjs "^0.5.0"
+    jose "^6.2.10"
+  optionalDependencies:
+    "@supabase/cli-darwin-arm64" "2.117.0"
+    "@supabase/cli-darwin-x64" "2.117.0"
+    "@supabase/cli-linux-arm64" "2.117.0"
+    "@supabase/cli-linux-arm64-musl" "2.117.0"
+    "@supabase/cli-linux-x64" "2.117.0"
+    "@supabase/cli-linux-x64-musl" "2.117.0"
+    "@supabase/cli-windows-arm64" "2.117.0"
+    "@supabase/cli-windows-x64" "2.117.0"
 
 systeminformation@^5.22.11:
   version "5.33.10"

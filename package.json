@@ -12,7 +12,12 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "supabase": "supabase",
+    "db:link": "supabase link",
+    "db:status": "supabase migration list --linked",
+    "db:push:dry": "supabase db push --linked --dry-run",
+    "db:push:dev": "supabase db push --linked --include-seed"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
@@ -46,6 +51,7 @@
     "oxfmt": "0.61.0",
     "oxlint": "1.76.0",
     "oxlint-tsgolint": "7.0.2001",
+    "supabase": "^2.117.0",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
     "vite": "^8.3.0",
