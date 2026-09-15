@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "supabase": "supabase",
-    "db:link": "supabase link",
+    "db:link": "./scripts/link-supabase-dev.sh",
     "db:status": "supabase migration list --linked",
     "db:push:dry": "supabase db push --linked --dry-run",
     "db:push:dev": "supabase db push --linked --include-seed"
