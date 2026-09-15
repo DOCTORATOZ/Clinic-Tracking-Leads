@@ -1,6 +1,6 @@
 # Role Model — Clinic Tracking Leads
 
-**Status:** Approved design contract before role/schema/UI implementation  
+**Status:** Implemented foundation (Supabase dev migrations `0006`–`0008`)  
 **Product language:** Thai for operational copy; English identifiers for code,
 APIs, database constraints, and audit events.
 
@@ -11,8 +11,10 @@ SaaS. It separates operating a clinic from operating the SaaS platform. It is
 the source of truth for future migrations, RLS policies, API guards, and
 administration screens.
 
-No current database role, RLS policy, or UI behavior is changed by this
-document alone.
+This document is the contract implemented by the role-model migrations and
+the role-aware API/UI foundation. Remaining clinic configuration screens and
+automated RLS integration tests are follow-up work, not an alternative role
+model.
 
 ## Roles
 
@@ -160,17 +162,16 @@ human-readable reason in platform audit data.
 
 ## Implementation mapping
 
-After this contract is approved for implementation, the following work is
-required:
+Implementation coverage and next work:
 
 | Area | Required change |
 |---|---|
-| Database | Add `system_administrators`, clinic lifecycle fields, invitation/audit metadata, `care_coordinator`/`clinic_admin` role migration, and a constraint preventing removal of the final Clinic Admin. |
-| Auth context | Extend role guards to resolve clinic membership separately from platform administration; return an access-pending state for authenticated users with no active membership. |
-| APIs | Add guarded invitation, membership, clinic configuration, source/service/plan, and tenant lifecycle endpoints. Supabase Auth admin operations remain server-only. |
-| RLS | Retain clinic isolation for clinical data; add platform policies for tenant metadata only. |
-| UI | Add Clinic Admin screens for users/configuration and System Admin screens for tenant lifecycle. Do not expose platform controls inside clinic workflows. |
-| Tests | Cover cross-clinic isolation, self-escalation rejection, final-Clinic-Admin protection, invitation audit, suspension enforcement, and System Admin clinical-data denial. |
+| Database | Implemented `system_administrators`, active-clinic selection, tenant lifecycle, clinical detail split, legacy-role migration, and final-Clinic-Admin trigger. |
+| Auth context | Implemented active clinic resolution, multi-clinic switching, separate System Admin guard, and access-pending screen. |
+| APIs | Implemented guarded active-clinic, membership/invitation, and tenant lifecycle endpoints. Auth invitations use a server-only service-role client. Config/source/service/plan CRUD remains next work. |
+| RLS | Implemented role-specific clinic policies, Care Coordinator safe projections, and platform tenant metadata projection. |
+| UI | Implemented operational role gating, Clinic Admin member management, and System Admin tenant lifecycle workspace. Configuration, tools, audit, source/service/plan screens remain next work. |
+| Tests | Existing type/unit checks pass. Add dedicated RLS/API integration coverage for cross-clinic denial, final-admin guard, and System Admin clinical-data denial before production rollout. |
 
 ## Out of scope
 

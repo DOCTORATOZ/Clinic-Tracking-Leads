@@ -83,6 +83,9 @@ do update set
 
 รายละเอียดเพิ่มเติมอยู่ที่ [docs/DEV_AUTH_SETUP.md](docs/DEV_AUTH_SETUP.md)
 
+การเพิ่ม platform-level System Admin ใช้ CLI แบบควบคุมได้ตาม
+[docs/SYSTEM_ADMIN_CLI.md](docs/SYSTEM_ADMIN_CLI.md) โดยไม่เพิ่ม clinic membership.
+
 ## รันระบบ
 
 ```bash
@@ -98,9 +101,14 @@ yarn typecheck
 yarn test
 yarn lint
 yarn db:status
+yarn test:integration
 ```
 
 `yarn lint` อาจรายงานปัญหาที่มีอยู่เดิมใน shared UI components; ตรวจเฉพาะไฟล์ที่แก้ใน pull request ด้วยก่อน merge
+
+`yarn test:integration` ใช้ Docker เพื่อเริ่ม Supabase local, reset schema/seed,
+สร้าง Auth user ทดสอบ และรัน Playwright โดยไม่แตะ Supabase dev. ติดตั้ง browser ครั้งแรกด้วย
+`yarn playwright install chromium`.
 
 ## โครงสร้างสำคัญ
 
@@ -142,4 +150,5 @@ Mutation สำคัญทำผ่าน PostgreSQL RPC เพื่อให�
 - [Requirements](docs/REQUIREMENTS.md)
 - [Supabase environment](docs/ENVIRONMENT.md)
 - [Development auth setup](docs/DEV_AUTH_SETUP.md)
+- [Local integration tests](docs/LOCAL_INTEGRATION_TESTS.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN_NEXT_SUPABASE.md)
