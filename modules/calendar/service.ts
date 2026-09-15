@@ -2,7 +2,18 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ClinicContext } from '@/lib/auth/context';
 
 export type CalendarReadItem = {
-  id: string; entityType: 'task' | 'appointment'; title: string; startsAt: string; status: string; caseId: string;
+  id: string;
+  entityType: 'task' | 'appointment';
+  title: string;
+  startsAt: string;
+  status: string;
+  syncStatus: 'disabled' | 'pending' | 'synced' | 'failed' | 'needs_review';
+  caseId: string;
+};
+
+export type CalendarConnectionSummary = {
+  status: 'disabled' | 'pending' | 'synced' | 'failed' | 'needs_review';
+  destinationCalendarId: string | null;
 };
 
 /** The in-app calendar is a read model from clinic-owned business tables. */
@@ -12,9 +23,33 @@ export async function listCalendarItems(client: SupabaseClient, context: ClinicC
     client.from('appointments').select('id, case_id, starts_at, status, appointment_type, cases(case_number, patients(full_name))').eq('clinic_id', context.clinicId).gte('starts_at', from).lt('starts_at', to).neq('status', 'cancelled'),
   ]);
   if (tasks.error) throw tasks.error; if (appointments.error) throw appointments.error;
-  const taskItems = (tasks.data ?? []).map((task: any) => ({ id: task.id, entityType: 'task' as const, title: `ติดตาม ${task.cases?.patients?.full_name ?? task.cases?.case_number ?? ''}`, startsAt: task.due_at, status: task.status, caseId: task.case_id }));
-  const appointmentItems = (appointments.data ?? []).map((item: any) => ({ id: item.id, entityType: 'appointment' as const, title: `${item.appointment_type} · ${item.cases?.patients?.full_name ?? item.cases?.case_number ?? ''}`, startsAt: item.starts_at, status: item.status, caseId: item.case_id }));
+  const entityIds = [...(tasks.data ?? []).map((task) => task.id), ...(appointments.data ?? []).map((item) => item.id)];
+  const { data: links, error: linksError } = entityIds.length
+    ? await client.from('calendar_event_links').select('entity_type,entity_id,sync_status').eq('clinic_id', context.clinicId).in('entity_id', entityIds)
+    : { data: [], error: null };
+  if (linksError) throw linksError;
+  const syncStatusByEntity = new Map((links ?? []).map((link) => [`${link.entity_type}:${link.entity_id}`, link.sync_status]));
+  const taskItems = (tasks.data ?? []).map((task) => {
+    const caseRecord = task.cases?.[0];
+    return { id: task.id, entityType: 'task' as const, title: `ติดตาม ${caseRecord?.patients?.[0]?.full_name ?? caseRecord?.case_number ?? ''}`, startsAt: task.due_at, status: task.status, syncStatus: syncStatusByEntity.get(`task:${task.id}`) ?? 'disabled', caseId: task.case_id };
+  });
+  const appointmentItems = (appointments.data ?? []).map((item) => {
+    const caseRecord = item.cases?.[0];
+    return { id: item.id, entityType: 'appointment' as const, title: `${item.appointment_type} · ${caseRecord?.patients?.[0]?.full_name ?? caseRecord?.case_number ?? ''}`, startsAt: item.starts_at, status: item.status, syncStatus: syncStatusByEntity.get(`appointment:${item.id}`) ?? 'disabled', caseId: item.case_id };
+  });
   return [...taskItems, ...appointmentItems].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+}
+
+export async function getCalendarConnection(client: SupabaseClient, context: ClinicContext): Promise<CalendarConnectionSummary> {
+  const { data, error } = await client
+    .from('calendar_connections')
+    .select('status,destination_calendar_id')
+    .eq('clinic_id', context.clinicId)
+    .maybeSingle();
+  if (error) throw error;
+  return data
+    ? { status: data.status, destinationCalendarId: data.destination_calendar_id }
+    : { status: 'disabled', destinationCalendarId: null };
 }
 
 export async function enqueueCalendarSync(client: SupabaseClient, context: ClinicContext, entityType: 'task' | 'appointment', entityId: string, operation: 'upsert' | 'cancel') {

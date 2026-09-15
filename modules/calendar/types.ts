@@ -13,6 +13,8 @@ export type CalendarItem = {
   id: string;
   type: CalendarItemType;
   title: string;
+  /** Clinic-local date in ISO format; displayed in Asia/Bangkok. */
+  date: string;
   startsAt: string;
   endsAt?: string;
   owner: string;

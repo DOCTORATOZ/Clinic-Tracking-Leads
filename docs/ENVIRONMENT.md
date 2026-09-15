@@ -25,3 +25,9 @@ Asia (Singapore), enable the Data API and automatic RLS, and leave
 “Automatically expose new tables” disabled. Migration `0003` explicitly grants
 only authenticated application access after RLS policies are defined. Do not
 use an anonymous/public grant for clinic data.
+
+## Development staff login
+
+The app uses email/password login for provisioned staff only. See
+`docs/DEV_AUTH_SETUP.md` to create the development admin and attach its clinic
+membership. Public self-sign-up is not part of this application.

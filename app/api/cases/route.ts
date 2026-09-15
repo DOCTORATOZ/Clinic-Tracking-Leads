@@ -2,13 +2,20 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireClinicContext } from '@/lib/auth/context';
 import { createCase } from '@/modules/leads/service';
+import { apiErrorResponse } from '@/lib/http/api-error';
+import { listCases } from '@/modules/operations/read-service';
+
+export async function GET() {
+  try {
+    const client = await createSupabaseServerClient();
+    return NextResponse.json(await listCases(client, await requireClinicContext(client)));
+  } catch (error) { return apiErrorResponse(error, 'Unable to load cases'); }
+}
 
 export async function POST(request: Request) {
   try {
     const client = await createSupabaseServerClient();
     const context = await requireClinicContext(client);
     return NextResponse.json(await createCase(client, context, await request.json()), { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to create case' }, { status: 400 });
-  }
+  } catch (error) { return apiErrorResponse(error, 'Unable to create case'); }
 }

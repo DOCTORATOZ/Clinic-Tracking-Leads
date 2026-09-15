@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { CalendarWorkspace } from '@/components/calendar/calendar-workspace';
+import { LiveWorkspace } from '@/components/operations/live-workspace';
 import { PatientDirectory } from '@/components/patients/patient-directory';
 import { seedLeadCases } from '@/modules/leads/mock-repository';
 import { serviceCatalog } from '@/modules/services/catalog';
@@ -51,7 +52,7 @@ const nav: [View, string, typeof Users, boolean?][] = [
   ['audit', 'ประวัติการตรวจสอบ', ShieldCheck, true],
 ];
 
-export default function Home() {
+function PrototypeHome() {
   const [role, setRole] = useState<Role>('admin'),
     [view, setView] = useState<View>('queue'),
     [items, setItems] = useState(seedLeadCases),
@@ -205,7 +206,7 @@ export default function Home() {
               choose={choose}
             />
           )}{' '}
-          {view === 'calendar' && <CalendarWorkspace choose={choose} />}{' '}
+          {view === 'calendar' && <CalendarWorkspace />}{' '}
           {view === 'dashboard' && <Dashboard />}
           {view === 'settings' && role === 'manager' && <Settings />}
           {view === 'audit' && role === 'manager' && <Audit />}
@@ -269,6 +270,10 @@ export default function Home() {
       )}
     </main>
   );
+}
+
+export default function Home() {
+  return <LiveWorkspace />;
 }
 function Nav({
   active,
