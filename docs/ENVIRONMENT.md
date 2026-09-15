@@ -17,3 +17,11 @@ before setting `CALENDAR_SYNC_ENABLED=true`.
 - Day-0 anchor: `cases.source_received_at`; due time: 10:00 Asia/Bangkok; no holiday/weekend exclusion.
 - Standard plan: Day 1, 3, 7, 14, 30. Generated tasks store step snapshots, so later plan edits never mutate history.
 - Google Calendar is a projection only. The clinic is the source of truth; Google-side edits become `needs_review`, never silent workflow changes.
+
+## Supabase project creation
+
+Create a neutral SaaS project name such as `daz-care-ops-dev`, choose Southeast
+Asia (Singapore), enable the Data API and automatic RLS, and leave
+“Automatically expose new tables” disabled. Migration `0003` explicitly grants
+only authenticated application access after RLS policies are defined. Do not
+use an anonymous/public grant for clinic data.
