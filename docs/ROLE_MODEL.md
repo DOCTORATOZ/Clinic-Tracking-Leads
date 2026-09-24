@@ -35,6 +35,8 @@ The implementation migration will map active `admin`/`manager` memberships to
 `clinic_admin`; it will not silently change access before the migration is
 approved and applied.
 
+> Supersession (24 September 2026): see `REQUIREMENTS_REVIEW_2026_09.md` for the approved workflow permissions, including coordinator plan activation on a named Nurse's instruction, reason-dependent case closure, and admin-only reopen. Historical matrices below remain reference material.
+
 ## Permission matrix
 
 | Action | Viewer | Care Co | Nurse | Clinic Admin | System Admin |

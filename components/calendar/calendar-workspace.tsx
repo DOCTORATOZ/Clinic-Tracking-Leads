@@ -59,6 +59,8 @@ export function CalendarWorkspace({
   });
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [selectedItemId, setSelectedItemId] = useState<string>();
+  const [typeFilter, setTypeFilter] = useState<'all' | 'task' | 'appointment'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'completed'>('all');
   const [items, setItems] = useState<CalendarReadItem[]>([]);
   const [connection, setConnection] = useState<CalendarConnectionSummary>({
     status: 'disabled',
@@ -122,7 +124,11 @@ export function CalendarWorkspace({
   const [selectedYear, selectedMonth, selectedDay] = selectedDate
     .split('-')
     .map(Number);
-  const eventsForDay = calendarItems
+  const visibleItems = calendarItems.filter((item) =>
+    (typeFilter === 'all' || item.entityType === typeFilter) &&
+    (statusFilter === 'all' || (statusFilter === 'completed' ? item.status === 'completed' : item.status !== 'completed' && item.status !== 'cancelled')),
+  );
+  const eventsForDay = visibleItems
     .filter((item) => item.date === selectedDate)
     .sort((a, b) => a.time.localeCompare(b.time));
   const selectedItem =
@@ -141,6 +147,10 @@ export function CalendarWorkspace({
     setVisibleMonth({ year: next.getFullYear(), month: next.getMonth() });
     showDate(next.getFullYear(), next.getMonth(), 1);
   };
+  const selectedDateObject = new Date(`${selectedDate}T00:00:00+07:00`);
+  const weekStart = new Date(selectedDateObject); weekStart.setUTCDate(weekStart.getUTCDate() - weekStart.getUTCDay());
+  const weekKeys = Array.from({ length: 7 }, (_, index) => { const day = new Date(weekStart); day.setUTCDate(day.getUTCDate() + index); return bangkokDate(day.toISOString()); });
+  const listItems = mode === 'day' ? eventsForDay : visibleItems.filter((item) => weekKeys.includes(item.date));
 
   return (
     <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -186,6 +196,10 @@ export function CalendarWorkspace({
               </button>
             ))}
           </div>
+          <div className="flex gap-2 text-xs">
+            <select aria-label="ประเภทปฏิทิน" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as typeof typeFilter)} className="rounded border border-[#d5e2db] bg-white px-2 py-1"><option value="all">ทุกประเภท</option><option value="task">งานติดตาม</option><option value="appointment">นัดหมาย</option></select>
+            <select aria-label="สถานะปฏิทิน" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} className="rounded border border-[#d5e2db] bg-white px-2 py-1"><option value="all">ทุกสถานะ</option><option value="open">กำลังดำเนินการ</option><option value="completed">เสร็จแล้ว</option></select>
+          </div>
         </div>
         {mode === 'month' ? (
           <div className="mt-4 overflow-x-auto">
@@ -214,7 +228,7 @@ export function CalendarWorkspace({
                     visibleMonth.month,
                     day,
                   );
-                  const dayEvents = calendarItems
+                  const dayEvents = visibleItems
                     .filter((item) => item.date === currentDate)
                     .sort((a, b) => a.time.localeCompare(b.time));
                   const isSelected = selectedDate === currentDate;
@@ -252,13 +266,7 @@ export function CalendarWorkspace({
               </div>
             </div>
           </div>
-        ) : (
-          <div className="mt-4 rounded-xl border border-dashed border-[#cfe0d7] bg-[#f8fbf9] p-8 text-center text-sm text-[#71847b]">
-            {mode === 'week'
-              ? 'เลือกวันที่เพื่อดูรายการงานในสัปดาห์'
-              : 'เลือกวันที่เพื่อดูรายการงาน'}
-          </div>
-        )}
+        ) : <div className="mt-4 overflow-hidden rounded-xl border border-[#e1ebe5]">{mode === 'week' && <div className="grid grid-cols-7 border-b bg-[#f6faf8] text-center text-xs font-semibold text-[#71847b]">{weekKeys.map((key) => <button key={key} onClick={() => setSelectedDate(key)} className={`p-2 ${key === selectedDate ? 'bg-[#e5f3ef] text-[#17695d]' : ''}`}>{Number(key.slice(-2))}</button>)}</div>}<div className="divide-y">{listItems.map((item) => <button key={item.id} onClick={() => { setSelectedDate(item.date); setSelectedItemId(item.id); }} className="flex w-full items-center gap-4 p-4 text-left hover:bg-[#f7fbf9]"><b className="w-14 text-sm text-[#197365]">{mode === 'week' ? `${item.date.slice(-2)} ${item.time}` : item.time}</b><span className={`size-2 rounded-full ${item.entityType === 'appointment' ? 'bg-[#197365]' : 'bg-[#c8872d]'}`} /><span className="flex-1 text-sm">{item.title}</span><span className="text-xs text-[#71847b]">{eventLabel(item)} · {item.status}</span></button>)}{!listItems.length && <p className="p-8 text-center text-sm text-[#71847b]">ไม่มีงานตามตัวกรองนี้</p>}</div></div>}
       </section>
       <aside className="h-fit rounded-2xl border border-[#dce6e0] bg-white p-5 lg:sticky lg:top-24">
         <div className="flex items-start justify-between gap-3">

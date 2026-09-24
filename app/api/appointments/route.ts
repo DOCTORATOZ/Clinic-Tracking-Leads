@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireClinicContext } from '@/lib/auth/context';
 import { createAppointment } from '@/modules/appointments/service';
+import { transitionAppointment } from '@/modules/workflow/service';
 import { apiErrorResponse } from '@/lib/http/api-error';
 import { listAppointments } from '@/modules/operations/read-service';
 
@@ -17,4 +18,13 @@ export async function POST(request: Request) {
     const client = await createSupabaseServerClient(); const context = await requireClinicContext(client);
     return NextResponse.json(await createAppointment(client, context, await request.json()), { status: 201 });
   } catch (error) { return apiErrorResponse(error, 'Unable to create appointment'); }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const client = await createSupabaseServerClient(); const context = await requireClinicContext(client);
+    const input = await request.json() as { appointmentId?: string };
+    if (!input.appointmentId) throw new Error('APPOINTMENT_ID_REQUIRED');
+    return NextResponse.json(await transitionAppointment(client, context, input.appointmentId, input));
+  } catch (error) { return apiErrorResponse(error, 'Unable to update appointment'); }
 }

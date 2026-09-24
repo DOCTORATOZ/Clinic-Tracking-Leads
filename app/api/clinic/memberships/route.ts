@@ -10,11 +10,15 @@ export async function GET() {
   try {
     const client = await createSupabaseServerClient(); const context = await requireClinicContext(client);
     requireRole(context, ['clinic_admin']);
+    // The route guard above is the authorization boundary. Use the server-only
+    // client here because the membership/invitation RLS policy cannot safely
+    // expose every staff record through the browser session.
+    const admin = createSupabaseAdminClient();
     const [{ data: memberships, error: membershipError }, { data: invitations, error: invitationError }] = await Promise.all([
-      client.from('clinic_memberships').select('user_id,display_name,role,active,created_at').eq('clinic_id', context.clinicId).order('created_at'),
-      client.from('membership_invitations').select('id,email,role,status,created_at,failure_reason').eq('clinic_id', context.clinicId).order('created_at', { ascending: false }),
+      admin.from('clinic_memberships').select('user_id,display_name,role,active,created_at').eq('clinic_id', context.clinicId).order('created_at'),
+      admin.from('membership_invitations').select('id,email,role,status,created_at,failure_reason').eq('clinic_id', context.clinicId).order('created_at', { ascending: false }),
     ]);
-    if (membershipError) throw membershipError; if (invitationError) throw invitationError;
+    if (membershipError) throw new Error(membershipError.message); if (invitationError) throw new Error(invitationError.message);
     return NextResponse.json({ memberships: memberships ?? [], invitations: invitations ?? [] });
   } catch (error) { return apiErrorResponse(error, 'Unable to load memberships'); }
 }
