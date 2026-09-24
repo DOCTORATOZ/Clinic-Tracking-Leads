@@ -6,6 +6,11 @@ import { writeAuditEvent } from '@/modules/audit/service';
 export async function findPatientDuplicates(client: SupabaseClient, context: ClinicContext, input: { hn?: string; phone?: string }) {
   const hn = normalizeHn(input.hn); const phone = normalizePhone(input.phone);
   if (!hn && !phone) return [];
+  if (context.role === 'care_coordinator') {
+    const { data, error } = await client.rpc('find_coordination_patient_matches', { p_hn: hn ?? null, p_phone: phone ?? null });
+    if (error) throw error;
+    return data ?? [];
+  }
   let query = client.from('patients').select('id, full_name, hn_normalized, phone_normalized, created_at').eq('clinic_id', context.clinicId);
   if (hn && phone) query = query.or(`hn_normalized.eq.${hn},phone_normalized.eq.${phone}`);
   else if (hn) query = query.eq('hn_normalized', hn); else query = query.eq('phone_normalized', phone!);

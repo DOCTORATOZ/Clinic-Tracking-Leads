@@ -2,12 +2,22 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ClinicContext } from '@/lib/auth/context';
 
 export async function listCases(client: SupabaseClient, context: ClinicContext) {
+  if (context.role === 'care_coordinator') {
+    const { data, error } = await client.from('coordination_cases').select('id,case_number,state,priority,source_received_at,full_name,phone_normalized,source_label').order('source_received_at', { ascending: false }).limit(100);
+    if (error) throw error;
+    return (data ?? []).map((item) => ({ ...item, patients: [{ full_name: item.full_name }], sources: item.source_label ? [{ label: item.source_label }] : [] }));
+  }
   const { data, error } = await client.from('cases').select('id,case_number,state,priority,source_received_at,patients(full_name,phone_normalized),sources(label)').eq('clinic_id', context.clinicId).order('source_received_at', { ascending: false }).limit(100);
   if (error) throw error;
   return data ?? [];
 }
 
 export async function listFollowUpTasks(client: SupabaseClient, context: ClinicContext) {
+  if (context.role === 'care_coordinator') {
+    const { data, error } = await client.from('coordination_follow_up_tasks').select('id,case_id,due_at,status,step_snapshot,case_number,full_name').in('status', ['pending', 'in_progress', 'paused']).order('due_at').limit(100);
+    if (error) throw error;
+    return (data ?? []).map((item) => ({ ...item, cases: [{ case_number: item.case_number, patients: [{ full_name: item.full_name }] }] }));
+  }
   const { data, error } = await client.from('follow_up_tasks').select('id,case_id,due_at,status,step_snapshot,cases(case_number,patients(full_name))').eq('clinic_id', context.clinicId).in('status', ['pending', 'in_progress', 'paused']).order('due_at').limit(100);
   if (error) throw error;
   return data ?? [];

@@ -43,6 +43,7 @@ export const recordFollowUpResultSchema = z.object({
   outcome: z.string().trim().min(1).max(100),
   symptomStatus: z.string().trim().max(100).optional(),
   summary: z.string().trim().min(1).max(5000),
+  clinicalSummary: z.string().trim().max(5000).optional(),
   nextAction: z.string().trim().max(1000).optional(),
   performedBy: id.optional(),
   reportedBy: id.optional(),
