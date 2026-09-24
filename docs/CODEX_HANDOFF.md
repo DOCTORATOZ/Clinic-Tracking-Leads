@@ -1,5 +1,7 @@
 # Clinic Tracking Leads — Codex Handoff
 
+> Supersession (24 September 2026): `REQUIREMENTS_REVIEW_2026_09.md` is the approved contract where this historical handoff conflicts: lead means person, cases are episodes, plans activate only after an actual anchor is confirmed, and Google sync/cron remain disabled. Implementation completion must be evidenced separately.
+
 **Status:** canonical handoff, 11 September 2026  
 **Product language:** Thai-first UI; English identifiers and APIs are acceptable.
 

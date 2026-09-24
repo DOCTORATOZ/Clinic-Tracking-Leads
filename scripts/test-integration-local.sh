@@ -15,5 +15,22 @@ export SUPABASE_URL="$API_URL"
 export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
 export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$ANON_KEY"
 export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+
+# `supabase start` can return while Kong/Auth are still warming up.  Do not
+# provision identities or launch Playwright until the endpoint used by login is
+# reachable; otherwise the suite fails nondeterministically with "Failed to fetch".
+for attempt in {1..45}; do
+  if curl --fail --silent --show-error "$API_URL/auth/v1/health" >/dev/null; then
+    break
+  fi
+  if [ "$attempt" -eq 45 ]; then
+    echo "Supabase Auth did not become ready at $API_URL." >&2
+    exit 1
+  fi
+  sleep 2
+done
 node scripts/provision-integration-users.mjs
 yarn playwright test --config=playwright.integration.config.ts
+# Restore the clean, representative One Day Surgery catalog after API tests
+# deliberately add temporary sources and plan versions.
+node scripts/provision-integration-users.mjs
