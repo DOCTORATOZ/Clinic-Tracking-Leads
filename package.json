@@ -18,11 +18,12 @@
     "supabase": "supabase",
     "db:link": "./scripts/link-supabase-dev.sh",
     "db:status": "supabase migration list --linked",
-    "db:push:dry": "supabase db push --linked --dry-run",
-    "db:push:dev": "supabase db push --linked --include-seed",
+    "db:push:dry": "node scripts/push-supabase-dev.mjs dry-run",
+    "db:push:dev": "node scripts/push-supabase-dev.mjs apply",
     "system-admin:grant": "node --env-file=.env ./scripts/grant-system-admin.mjs",
     "test:integration": "bash ./scripts/test-contract-ui.sh",
-    "test:database": "bash ./scripts/test-contract-database.sh"
+    "test:database": "bash ./scripts/test-contract-database.sh",
+    "test:upgrade": "CONTRACT_UPGRADE_REHEARSAL=1 bash ./scripts/test-contract-database.sh"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

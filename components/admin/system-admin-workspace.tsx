@@ -105,7 +105,11 @@ export function SystemAdminWorkspace() {
           )}
         </div>
       </section>
-      {selected&&<ActionDialog title={selected.active?'ยืนยันระงับคลินิก':'ยืนยันเปิดใช้งานคลินิก'} close={()=>setSelected(undefined)} confirm={async values=>{await update(selected,!selected.active,String(values.get('reason')));}}><p>{selected.name}</p><p className="text-sm">การระงับคลินิกจะปฏิเสธการใช้งานข้อมูลคลินิกของสมาชิกทุกคน โดยไม่ลบข้อมูล</p><label>เหตุผล<input name="reason" required maxLength={1000}/></label></ActionDialog>}
+      {selected&&<ActionDialog title={selected.active?'ยืนยันระงับคลินิก':'ยืนยันเปิดใช้งานคลินิก'} close={()=>setSelected(undefined)} confirm={async values=>{
+        const reason = values.get('reason');
+        if (typeof reason !== 'string' || !reason.trim()) throw new Error('กรุณาระบุเหตุผล');
+        await update(selected,!selected.active,reason.trim());
+      }}><p>{selected.name}</p><p className="text-sm">การระงับคลินิกจะปฏิเสธการใช้งานข้อมูลคลินิกของสมาชิกทุกคน โดยไม่ลบข้อมูล</p><label>เหตุผล<input name="reason" required maxLength={1000}/></label></ActionDialog>}
     </main>
   );
 }

@@ -65,7 +65,7 @@ export function CalendarWorkspace({
   const [typeFilter, setTypeFilter] = useState<'all' | 'task' | 'appointment'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'completed'>('all');
   const [assigneeFilter,setAssigneeFilter]=useState('all');
-  const [loading,setLoading]=useState(true);
+  const [loadedKey,setLoadedKey]=useState<string>();
   const [reload,setReload]=useState(0);
   const [items, setItems] = useState<CalendarReadItem[]>([]);
   const [connection, setConnection] = useState<CalendarConnectionSummary>({
@@ -73,10 +73,11 @@ export function CalendarWorkspace({
     destinationCalendarId: null,
   });
   const [loadError, setLoadError] = useState<string>();
+  const requestKey = `${visibleMonth.year}:${visibleMonth.month}:${mode}:${selectedDate}:${reload}`;
+  const loading = loadedKey !== requestKey;
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);setLoadError(undefined);
     const range = calendarRange(mode, selectedDate, visibleMonth.year, visibleMonth.month);
 
     fetch(`/api/calendar?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`)
@@ -100,11 +101,11 @@ export function CalendarWorkspace({
         if (!cancelled) {
           setLoadError(error instanceof Error ? error.message : 'ไม่สามารถโหลดปฏิทินได้');setItems([]);
         }
-      }).finally(()=>{if(!cancelled)setLoading(false);});
+      }).finally(()=>{if(!cancelled)setLoadedKey(requestKey);});
     return () => {
       cancelled = true;
     };
-  }, [visibleMonth.year, visibleMonth.month, mode, selectedDate, reload]);
+  }, [visibleMonth.year, visibleMonth.month, mode, selectedDate, reload, requestKey]);
 
   const calendarItems = useMemo<CalendarDisplayItem[]>(
     () =>
@@ -165,7 +166,7 @@ export function CalendarWorkspace({
   return (
     <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
       <section className="rounded-2xl border border-[#dce6e0] bg-white p-5">
-        {loadError && (
+        {!loading && loadError && (
           <p role="alert" className="mb-3 rounded-lg bg-[#fff4e5] p-3 text-sm text-[#9a641b]">
             {loadError}
             <button className="ml-3 underline" onClick={()=>setReload(value=>value+1)}>ลองใหม่</button>

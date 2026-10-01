@@ -1,5 +1,35 @@
 # แผนทำต่อแบบแบ่งชุดตามโควตา
 
+## ล่าสุด — 2 ตุลาคม 2026: Preview ขึ้นแล้ว
+
+- เว็บ Preview พร้อม: https://clinic-tracking-leads-qy1l9ii9n-doctor-a-to-z.vercel.app (ยังมี Vercel Authentication)
+- Supabase dev apply 0001–0018 แล้ว ไม่ reset/seed; public signup ปิด, invitation ปิด, Google sync ปิด และไม่แตะ Production
+- Local browser 7/7 และ remote login/สิทธิ์ครบ 5 roles พร้อม flow intake → Nurse result → appointment/calendar ผ่าน
+- ปิดบัญชีทดสอบทั้งหมดและ suspend คลินิกทดสอบแล้ว; คง membership Admin สุดท้ายตาม guard โดยบัญชีถูก ban
+- หลักฐาน ข้อจำกัด และ security warnings อยู่ใน [PREVIEW_RELEASE.md](PREVIEW_RELEASE.md); ยังไม่ถือว่าครบ requirement หรือพร้อม production
+- ทำต่อ: ให้ผู้ใช้ UAT ผ่าน Clinic Admin → เก็บ defect → ปิดงาน correctness/CRUD และ security review ตามชุดด้านล่าง → CI จริง ก่อนพิจารณา production
+- Usage ก่อนปิดงาน: 5-hour 92%, weekly 30%; ไม่ใช้ reset credit และไม่เริ่มชุดฟีเจอร์ใหม่
+- Checkpoint เก่าที่ระบุว่ายังไม่ deploy เป็นประวัติ ไม่ใช่สถานะล่าสุด
+
+## ล่าสุด — local release gates พร้อมตรวจปล่อย
+
+- รายละเอียดและคำสั่งทำต่ออยู่ใน [PREVIEW_RELEASE.md](PREVIEW_RELEASE.md)
+- ผู้ใช้ยืนยัน dev ref `gispylnpqiwxqbqnvmya` และอนุมัติใช้บัญชีที่ผู้ดูแล provision ก่อน; ปิดคำเชิญผ่าน UI/API แล้ว
+- Lint 0 errors/0 warnings, TypeScript ผ่าน, unit 38/38, harness 4/4; workflow browser 6/6 ก่อน patch ปิด invitation (ต้องตรวจเพิ่ม)
+- Fresh migration/RLS และ upgrade rehearsal พร้อม synthetic 0010 data ผ่าน; dry run remote มี 0011–0018 ไม่มี seed
+- ยังไม่ apply/deploy/commit; usage ล่าสุด 97% จึงเก็บขั้นตอนต่อให้ตรวจ remote หลัง apply ได้ครบ ไม่เริ่ม mutation ปลายทางใกล้หมดโควตา
+- ข้อความ checkpoint เก่าด้านล่างเป็นประวัติ ไม่ใช่จำนวน lint/สถานะล่าสุด
+
+## จุดส่งต่อ — เตรียม Preview 1 ตุลาคม 2026
+
+- ผู้ใช้อนุมัติเดินตามลำดับเตรียม Supabase dev + Vercel Preview; ยังไม่อนุญาต production/Google sync
+- รอบนี้แก้ chart key coercion 3 จุด, ตรวจ reason ใน System Admin ว่าเป็นข้อความไม่ว่าง และ named PostCSS config; lint ลดจาก 24 errors/1 warning เป็น 20 errors/0 warnings; TypeScript ผ่าน
+- หยุดงานเพิ่มเพราะ usage ล่าสุด 62% เกินเพดาน 60% ระหว่างรอบตรวจ (เริ่มรอบ 56%); ไม่ใช้ reset credits
+- ขั้นถัดไป: แก้ lint 20 จุดโดยไม่ปิด rules → final regression → แยก db push ออกจาก seed → rehearsal upgrade 0010 ถึง 0018 → ยืนยัน linked project เป็น dev → apply migrations เท่านั้น → ตั้ง Preview env/Auth และ smoke ทุก role
+- Remote ที่อ่านล่าสุดมี migrations 0001–0010; local มีถึง 0018 ห้าม deploy code ใหม่โดยถือว่าฐานพร้อมแล้ว
+- ยังไม่ได้แก้ invitation callback/password setup; หากทดลองก่อนต้องใช้บัญชีที่ผู้ดูแล provision และระบุข้อจำกัด
+- ยังไม่ได้ apply/seed/deploy/commit หรือหยุด server ที่ผู้ใช้ทดสอบ
+
 อัปเดต 1 ตุลาคม 2026 · ดูหลักฐานล่าสุดใน [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)
 Contract หลัก: [REQUIREMENTS_REVIEW_2026_09.md](REQUIREMENTS_REVIEW_2026_09.md)
 

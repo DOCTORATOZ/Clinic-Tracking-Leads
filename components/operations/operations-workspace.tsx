@@ -851,6 +851,7 @@ function Modal({
   return (
     <div
       className="fixed inset-0 z-50 bg-[#19312c]/35"
+      role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}

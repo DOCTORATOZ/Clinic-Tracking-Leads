@@ -1,0 +1,16 @@
+.env*
+supabase/.temp
+supabase-test/.temp
+.next*
+test-results
+playwright-report
+coverage
+outputs
+work
+dist
+out
+.vinext
+.wrangler
+*.tsbuildinfo
+*.pem
+.yarn

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { SignOutButton } from '@/components/auth/sign-out-button';
 import { ActionDialog } from './action-dialog';
+import { invitationsEnabled } from '@/lib/release-capabilities';
 
 type Tab =
   | 'users'
@@ -184,7 +185,8 @@ function Users({
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
       <Card>
         <h1 className="font-semibold">เชิญผู้ใช้</h1>
-        <form
+        {!invitationsEnabled && <p className="mt-3 text-sm text-[#71847b]">Preview รอบนี้ยังไม่เปิดส่งคำเชิญ กรุณาให้ผู้ดูแลสร้างบัญชีและเพิ่มสมาชิกคลินิกผ่าน Supabase ก่อน</p>}
+        {invitationsEnabled && <form
           onSubmit={(event) => {
             event.preventDefault();
             save(() =>
@@ -216,7 +218,7 @@ function Users({
           <button className="mt-4 w-full rounded bg-[#197365] py-2 text-sm text-white">
             ส่งคำเชิญ
           </button>
-        </form>
+        </form>}
       </Card>
       <Card>
         <h1 className="font-semibold">สมาชิกคลินิก</h1>

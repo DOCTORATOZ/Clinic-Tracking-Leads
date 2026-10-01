@@ -114,7 +114,7 @@ export function CaseWorkflow({
   const [detail, setDetail] = useState<Detail>();
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loadedKey, setLoadedKey] = useState<string>();
   const [revision, setRevision] = useState(0);
   const [action, setAction] = useState<Action>();
   const [target, setTarget] = useState('');
@@ -126,28 +126,27 @@ export function CaseWorkflow({
   const dialog = useRef<HTMLDialogElement>(null);
   const lock = useRef(false);
   const key = useRef('');
+  const requestKey = `${id}:${revision}`;
+  const loading = loadedKey !== requestKey;
   useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
+    if (!id) return;
     const control = new AbortController();
-    setLoading(true);
-    setError('');
     fetch(`/api/cases/${id}`, { signal: control.signal })
       .then(async (response) => {
         const data = await response.json();
+        if (control.signal.aborted) return;
         if (!response.ok) throw new Error(data.error);
+        setError('');
         setDetail(data);
       })
       .catch((reason) => {
         if (!control.signal.aborted) setError(reason.message);
       })
       .finally(() => {
-        if (!control.signal.aborted) setLoading(false);
+        if (!control.signal.aborted) setLoadedKey(requestKey);
       });
     return () => control.abort();
-  }, [id, revision]);
+  }, [id, revision, requestKey]);
   useEffect(() => {
     if (action) dialog.current?.showModal();
   }, [action]);

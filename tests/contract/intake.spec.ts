@@ -1,4 +1,30 @@
 import { test, expect, type Page } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
+
+test('Preview invitation is disabled in UI and API without creating an Auth user', async ({ page }) => {
+  expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:55321');
+  const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+  const before = await admin.auth.admin.listUsers({ perPage: 1000 });
+  expect(before.error).toBeNull();
+  await signIn(page, 'admin-a@integration.local');
+  await page.goto('/admin');
+  await expect(page.getByText(/Preview รอบนี้ยังไม่เปิดส่งคำเชิญ/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'ส่งคำเชิญ', exact: true })).toHaveCount(0);
+  const membersBefore = await (await page.request.get('/api/clinic/memberships')).json();
+  const payload = { email: `blocked-${Date.now()}@integration.local`, role: 'viewer' };
+  const denied = await page.request.post('/api/clinic/memberships', { data: payload });
+  expect(denied.status()).toBe(503);
+  expect((await denied.json()).error).toBe('INVITATIONS_DISABLED');
+  const membersAfter = await (await page.request.get('/api/clinic/memberships')).json();
+  expect(membersAfter).toEqual(membersBefore);
+  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await signIn(page, 'coordinator-a@integration.local');
+  expect((await page.request.post('/api/clinic/memberships', { data: payload })).status()).toBe(403);
+  const after = await admin.auth.admin.listUsers({ perPage: 1000 });
+  expect(after.error).toBeNull();
+  expect(after.data.users.map(user => user.id).sort()).toEqual(before.data.users.map(user => user.id).sort());
+});
 test('Nurse reports own assigned work; clinical detail stays out of coordinator and cross-clinic projections',async({page})=>{
   await signIn(page,'admin-a@integration.local');
   const reference=await (await page.request.get('/api/reference-data')).json();

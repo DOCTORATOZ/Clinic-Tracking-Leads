@@ -1,0 +1,6 @@
+# Sparse hosted-Auth patch. Never push local-development settings to hosted Supabase.
+# Use an explicit approved dev --project-ref and review config diff first.
+project_id = "clinic_preview_auth"
+
+[auth]
+enable_signup = false

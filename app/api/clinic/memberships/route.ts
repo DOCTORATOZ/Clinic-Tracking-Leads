@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { requireClinicContext, requireRole } from '@/lib/auth/context';
 import { apiErrorResponse } from '@/lib/http/api-error';
+import { invitationsEnabled } from '@/lib/release-capabilities';
 
 const clinicRoles = new Set(['viewer', 'nurse', 'care_coordinator', 'clinic_admin']);
 
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
     if (!input.email || !input.role || !clinicRoles.has(input.role)) throw new Error('INVALID_INVITATION_INPUT');
     const client = await createSupabaseServerClient(); const context = await requireClinicContext(client);
     requireRole(context, ['clinic_admin']);
+    if (!invitationsEnabled) return NextResponse.json({ error: 'INVITATIONS_DISABLED', message: 'Preview นี้ให้ผู้ดูแลสร้างบัญชีและสมาชิกคลินิกก่อน' }, { status: 503 });
     const admin = createSupabaseAdminClient();
     const { data: invite, error: inviteError } = await admin.auth.admin.inviteUserByEmail(input.email, { data: { display_name: input.displayName?.trim() || input.email } });
     if (inviteError || !invite.user) throw new Error(inviteError?.message ?? 'INVITATION_FAILED');
