@@ -7,19 +7,22 @@
   },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1 --port 3001",
+    "dev:sandbox": "bash ./scripts/dev-sandbox.sh",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "oxlint",
     "format": "oxfmt",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:harness": "node --test tests/contract-safety.test.mjs",
     "supabase": "supabase",
     "db:link": "./scripts/link-supabase-dev.sh",
     "db:status": "supabase migration list --linked",
     "db:push:dry": "supabase db push --linked --dry-run",
     "db:push:dev": "supabase db push --linked --include-seed",
     "system-admin:grant": "node --env-file=.env ./scripts/grant-system-admin.mjs",
-    "test:integration": "bash ./scripts/test-integration-local.sh"
+    "test:integration": "bash ./scripts/test-contract-ui.sh",
+    "test:database": "bash ./scripts/test-contract-database.sh"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { calendarRange, bangkokWeekKeys, bangkokDateKey } from '@/lib/calendar-range';
 import type {
   CalendarConnectionSummary,
   CalendarReadItem,
@@ -49,18 +50,23 @@ type CalendarResponse = {
 
 export function CalendarWorkspace({
   onOpenCase,
+  staff = [],
 }: {
   onOpenCase?: (caseId: string) => void;
+  staff?: {user_id:string;display_name:string}[];
 }) {
   const [mode, setMode] = useState<'month' | 'week' | 'day'>('month');
   const [visibleMonth, setVisibleMonth] = useState(() => {
-    const now = new Date();
+    const now = new Date(`${bangkokDateKey(new Date())}T00:00:00Z`);
     return { year: now.getUTCFullYear(), month: now.getUTCMonth() };
   });
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState(() => bangkokDateKey(new Date()));
   const [selectedItemId, setSelectedItemId] = useState<string>();
   const [typeFilter, setTypeFilter] = useState<'all' | 'task' | 'appointment'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'completed'>('all');
+  const [assigneeFilter,setAssigneeFilter]=useState('all');
+  const [loading,setLoading]=useState(true);
+  const [reload,setReload]=useState(0);
   const [items, setItems] = useState<CalendarReadItem[]>([]);
   const [connection, setConnection] = useState<CalendarConnectionSummary>({
     status: 'disabled',
@@ -70,10 +76,10 @@ export function CalendarWorkspace({
 
   useEffect(() => {
     let cancelled = false;
-    const start = new Date(Date.UTC(visibleMonth.year, visibleMonth.month, 1, -7));
-    const end = new Date(Date.UTC(visibleMonth.year, visibleMonth.month + 1, 1, -7));
+    setLoading(true);setLoadError(undefined);
+    const range = calendarRange(mode, selectedDate, visibleMonth.year, visibleMonth.month);
 
-    fetch(`/api/calendar?from=${encodeURIComponent(start.toISOString())}&to=${encodeURIComponent(end.toISOString())}`)
+    fetch(`/api/calendar?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`)
       .then(async (response) => {
         const body = await response.json();
         if (!response.ok) throw new Error(body.error ?? 'ไม่สามารถโหลดปฏิทินได้');
@@ -92,13 +98,13 @@ export function CalendarWorkspace({
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setLoadError(error instanceof Error ? error.message : 'ไม่สามารถโหลดปฏิทินได้');
+          setLoadError(error instanceof Error ? error.message : 'ไม่สามารถโหลดปฏิทินได้');setItems([]);
         }
-      });
+      }).finally(()=>{if(!cancelled)setLoading(false);});
     return () => {
       cancelled = true;
     };
-  }, [visibleMonth.year, visibleMonth.month]);
+  }, [visibleMonth.year, visibleMonth.month, mode, selectedDate, reload]);
 
   const calendarItems = useMemo<CalendarDisplayItem[]>(
     () =>
@@ -125,6 +131,7 @@ export function CalendarWorkspace({
     .split('-')
     .map(Number);
   const visibleItems = calendarItems.filter((item) =>
+    (assigneeFilter==='all'||(assigneeFilter==='unassigned'?!item.assigneeId:item.assigneeId===assigneeFilter)) &&
     (typeFilter === 'all' || item.entityType === typeFilter) &&
     (statusFilter === 'all' || (statusFilter === 'completed' ? item.status === 'completed' : item.status !== 'completed' && item.status !== 'cancelled')),
   );
@@ -143,13 +150,16 @@ export function CalendarWorkspace({
     );
   };
   const moveMonth = (offset: number) => {
+    if(mode!=='month'){
+      const next=new Date(`${selectedDate}T00:00:00Z`);next.setUTCDate(next.getUTCDate()+offset*(mode==='week'?7:1));
+      setVisibleMonth({year:next.getUTCFullYear(),month:next.getUTCMonth()});
+      showDate(next.getUTCFullYear(),next.getUTCMonth(),next.getUTCDate());return;
+    }
     const next = new Date(visibleMonth.year, visibleMonth.month + offset, 1);
     setVisibleMonth({ year: next.getFullYear(), month: next.getMonth() });
     showDate(next.getFullYear(), next.getMonth(), 1);
   };
-  const selectedDateObject = new Date(`${selectedDate}T00:00:00+07:00`);
-  const weekStart = new Date(selectedDateObject); weekStart.setUTCDate(weekStart.getUTCDate() - weekStart.getUTCDay());
-  const weekKeys = Array.from({ length: 7 }, (_, index) => { const day = new Date(weekStart); day.setUTCDate(day.getUTCDate() + index); return bangkokDate(day.toISOString()); });
+  const weekKeys = bangkokWeekKeys(selectedDate);
   const listItems = mode === 'day' ? eventsForDay : visibleItems.filter((item) => weekKeys.includes(item.date));
 
   return (
@@ -158,14 +168,16 @@ export function CalendarWorkspace({
         {loadError && (
           <p role="alert" className="mb-3 rounded-lg bg-[#fff4e5] p-3 text-sm text-[#9a641b]">
             {loadError}
+            <button className="ml-3 underline" onClick={()=>setReload(value=>value+1)}>ลองใหม่</button>
           </p>
         )}
+        {loading&&<output className="block">กำลังโหลดปฏิทิน…</output>}
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#e8eeea] pb-4">
           <div className="flex items-center gap-2">
             <button
               onClick={() => moveMonth(-1)}
               className="rounded-lg p-1.5 text-[#52665e] hover:bg-[#edf3ef]"
-              aria-label="เดือนก่อนหน้า"
+              aria-label={mode==='month'?'เดือนก่อนหน้า':mode==='week'?'สัปดาห์ก่อนหน้า':'วันก่อนหน้า'}
             >
               <ChevronLeft size={18} />
             </button>
@@ -180,7 +192,7 @@ export function CalendarWorkspace({
             <button
               onClick={() => moveMonth(1)}
               className="rounded-lg p-1.5 text-[#52665e] hover:bg-[#edf3ef]"
-              aria-label="เดือนถัดไป"
+              aria-label={mode==='month'?'เดือนถัดไป':mode==='week'?'สัปดาห์ถัดไป':'วันถัดไป'}
             >
               <ChevronRight size={18} />
             </button>
@@ -196,7 +208,8 @@ export function CalendarWorkspace({
               </button>
             ))}
           </div>
-          <div className="flex gap-2 text-xs">
+          <div className="flex flex-wrap gap-2 text-xs">
+            <select aria-label="ผู้รับผิดชอบปฏิทิน" value={assigneeFilter} onChange={event=>setAssigneeFilter(event.target.value)} className="rounded border border-[#d5e2db] bg-white px-2 py-1"><option value="all">ทุกผู้รับผิดชอบ</option><option value="unassigned">ยังไม่มอบหมาย</option>{staff.map(person=><option key={person.user_id} value={person.user_id}>{person.display_name}</option>)}</select>
             <select aria-label="ประเภทปฏิทิน" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as typeof typeFilter)} className="rounded border border-[#d5e2db] bg-white px-2 py-1"><option value="all">ทุกประเภท</option><option value="task">งานติดตาม</option><option value="appointment">นัดหมาย</option></select>
             <select aria-label="สถานะปฏิทิน" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} className="rounded border border-[#d5e2db] bg-white px-2 py-1"><option value="all">ทุกสถานะ</option><option value="open">กำลังดำเนินการ</option><option value="completed">เสร็จแล้ว</option></select>
           </div>

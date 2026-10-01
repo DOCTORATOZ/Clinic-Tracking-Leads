@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+echo 'This legacy runner resets the Care D local database and is retired. Use yarn test:integration for the isolated project.' >&2
+exit 1
+
 # Recreate Auth as well as Postgres. `db reset` alone does not reload auth
 # provider configuration from config.toml.
 supabase stop --no-backup >/dev/null 2>&1 || true

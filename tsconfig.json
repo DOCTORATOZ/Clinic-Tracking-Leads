@@ -39,7 +39,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     ".next-integration/types/**/*.ts",
-    ".next-integration/dev/types/**/*.ts"
+    ".next-integration/dev/types/**/*.ts",
+    ".next-contract/types/**/*.ts",
+    ".next-contract/dev/types/**/*.ts",
+    ".next-contract-build/types/**/*.ts",
+    ".next-contract-build/dev/types/**/*.ts",
+    ".next-sandbox/types/**/*.ts",
+    ".next-sandbox/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

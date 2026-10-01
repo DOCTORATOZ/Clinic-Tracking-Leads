@@ -1,0 +1,139 @@
+import { test, expect, type Page } from '@playwright/test';
+test('Nurse reports own assigned work; clinical detail stays out of coordinator and cross-clinic projections',async({page})=>{
+  await signIn(page,'admin-a@integration.local');
+  const reference=await (await page.request.get('/api/reference-data')).json();
+  const nurse=reference.nurses.find((person:{display_name:string})=>person.display_name==='Nurse A');
+  expect(nurse).toBeTruthy();
+  const name=`Nurse contract ${Date.now()}`;
+  const response=await page.request.post('/api/intake',{data:{requestId:crypto.randomUUID(),mode:'case',patientDecision:{kind:'create',patient:{fullName:name,socialPlatform:'line_oa',socialAccount:name,contactPermission:'granted'}},case:{title:'Nurse attribution',assignedTo:nurse.user_id}}});
+  expect(response.status(),await response.text()).toBe(201);
+  const created=await response.json();
+  const task=await page.request.post(`/api/cases/${created.case.id}/tasks`,{data:{label:'ประเมินเคสทดสอบ',assignedTo:nurse.user_id,dueAt:new Date().toISOString(),reason:'Nurse assignment test'}});
+  expect(task.status(),await task.text()).toBe(201);
+  await page.getByRole('button',{name:'ออกจากระบบ'}).click();await expect(page).toHaveURL(/\/login$/);
+  await signIn(page,'nurse-a@integration.local');
+  await page.getByRole('button',{name:'ลีด / ผู้ป่วย',exact:true}).click();await page.getByLabel('ค้นหาบุคคล').fill(name);
+  await page.getByRole('button',{name:new RegExp(name)}).click();await page.getByRole('button',{name:'เปิดเคส 1',exact:true}).click();
+  await page.getByRole('button',{name:'บันทึกผล',exact:true}).click();
+  const dialog=page.getByRole('dialog',{name:'จัดการเคส'});
+  await dialog.getByLabel('วันเวลาเกิดเหตุการณ์ · เวลาไทย').fill('2026-09-25T09:00');
+  await dialog.getByLabel('ผลลัพธ์',{exact:true}).fill('รายงานโดย Nurse');
+  await dialog.getByLabel('สรุปที่ใช้ประสานงานได้').fill('สรุปสำหรับประสานงาน');
+  await dialog.getByLabel('รายละเอียดทางคลินิก (จำกัดสิทธิ์)',{exact:true}).fill('SYNTHETIC RESTRICTED REPORT');
+  await dialog.getByRole('button',{name:'ยืนยันบันทึก'}).click();await expect(dialog).not.toBeVisible();
+  await expect(page.getByText(/SYNTHETIC RESTRICTED REPORT/)).toBeVisible();
+  const own=await (await page.request.get(`/api/cases/${created.case.id}`)).json();
+  expect(own.results[0].performed_by).toBe(nurse.user_id);expect(own.results[0].reported_by).toBe(nurse.user_id);expect(own.results[0].recorded_by).toBe(nurse.user_id);
+  expect(own.clinicalResults).toHaveLength(1);
+  await page.getByRole('button',{name:'ออกจากระบบ'}).click();await expect(page).toHaveURL(/\/login$/);
+  await signIn(page,'coordinator-a@integration.local');
+  const safe=await (await page.request.get(`/api/cases/${created.case.id}`)).json();
+  expect(safe.clinicalResults).toBeUndefined();expect(JSON.stringify(safe)).not.toContain('SYNTHETIC RESTRICTED REPORT');
+  expect((await page.request.get('/api/clinic/admin')).status()).toBe(403);
+  await page.getByRole('button',{name:'ออกจากระบบ'}).click();await expect(page).toHaveURL(/\/login$/);
+  await signIn(page,'nurse-b@integration.local');
+  expect((await page.request.get(`/api/cases/${created.case.id}`)).status()).toBe(404);
+});
+async function signIn(page:Page,email:string) {
+  await page.goto('/login');
+  await page.getByLabel('อีเมล').fill(email);
+  await page.getByLabel('รหัสผ่าน').fill('IntegrationPass123!');
+  await page.getByRole('button',{name:'เข้าสู่ระบบ'}).click();
+  await expect(page).not.toHaveURL(/\/login$/, { timeout: 20000 });
+}
+test('real login, inline validation, social-only lead, directory, existing-person case and deferred plan', async ({page})=>{
+  await signIn(page,'coordinator-a@integration.local');
+  await page.getByRole('button',{name:'เพิ่มลีด / สร้างเคส',exact:true}).click();
+  const dialog=page.getByRole('dialog');
+  await dialog.getByRole('button',{name:'ถัดไป',exact:true}).click();
+  await expect(dialog.getByText('กรุณาระบุชื่อหรือชื่อแสดง')).toBeVisible();
+  const name=`Contract person ${Date.now()}`;
+  await dialog.getByLabel('ชื่อ / ชื่อแสดง *',{exact:true}).fill(name);
+  await dialog.getByLabel('ช่องทาง social',{exact:true}).selectOption('line_oa');
+  await dialog.getByLabel('บัญชี social / ลิงก์โปรไฟล์').fill(name);
+  await dialog.getByLabel(/วันติดต่อต่อไป/).fill('2026-10-01T09:00');
+  await dialog.getByRole('button',{name:'บันทึกลีดอย่างเดียว'}).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByRole('heading',{name:'ทะเบียนลีด / ผู้ป่วย'})).toBeVisible();
+  await page.getByLabel('ค้นหาบุคคล').fill(name);
+  await expect(page.getByRole('button', {name}).getByText('0 เคส', {exact:false})).toBeVisible();
+  await page.getByRole('button',{name:'เปิดเคสใหม่ของบุคคลนี้'}).click();
+  await dialog.getByRole('button',{name:'ถัดไป',exact:true}).click();
+  await dialog.getByLabel('หัวข้อ / เหตุผลที่ติดต่อ *').fill('ขอประเมินก่อนหัตถการ');
+  await dialog.getByLabel('บริการ / โปรแกรม').selectOption('a3000000-0000-4000-8000-000000000001');
+  await dialog.getByRole('button',{name:'ถัดไป',exact:true}).click();
+  await expect(dialog.getByText('แผนรอยืนยันวันเริ่ม — ยังไม่สร้างงานติดตาม')).toBeVisible();
+  await dialog.getByRole('button',{name:'ยืนยันสร้างเคส'}).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByText('ยังไม่มีรอบแผนที่ยืนยันวันเริ่ม')).toBeVisible();
+  const people = await (await page.request.get(`/api/patients?query=${encodeURIComponent(name)}`)).json();
+  expect(people).toHaveLength(1); expect(people[0].caseIds).toHaveLength(1);
+  const details = await (await page.request.get(`/api/cases/${people[0].caseIds[0]}`)).json();
+  expect(details.tasks).toHaveLength(0); expect(details.clinical).toBeUndefined();
+});
+test('viewer cannot mutate; system admin isolated from clinic APIs',async({page})=>{
+  await signIn(page,'viewer-a@integration.local');
+  await expect(page.getByRole('button',{name:'เพิ่มลีด / สร้างเคส',exact:true})).toHaveCount(0);
+  expect((await page.request.post('/api/intake',{data:{}})).status()).toBe(403);
+  await page.getByRole('button',{name:'ออกจากระบบ'}).click(); await expect(page).toHaveURL(/\/login$/);
+  await signIn(page,'system@integration.local'); await expect(page).toHaveURL(/\/system$/);
+  expect((await page.request.get('/api/cases')).status()).toBe(403);
+  expect((await page.request.get('/api/platform/clinics')).status()).toBe(200);
+});
+test('mobile intake fits the viewport and traps modal focus',async({page})=>{
+  await page.setViewportSize({width:390,height:844});await signIn(page,'coordinator-a@integration.local');
+  await page.getByRole('button',{name:'เพิ่มลีด / สร้างเคส',exact:true}).click();
+  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
+  const box=await dialog.boundingBox();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.width).toBeLessThanOrEqual(390);
+  for(let i=0;i<20;i++){await page.keyboard.press('Tab');expect(await dialog.evaluate(node=>node.contains(document.activeElement))).toBe(true);}
+  await page.screenshot({path:'test-results/contract-mobile-intake.png'});
+});
+
+test('dirty intake still warns before reload and keeps fields when reload is cancelled', async ({page}) => {
+  await signIn(page, 'coordinator-a@integration.local');
+  await page.getByRole('button', {name: 'เพิ่มลีด / สร้างเคส', exact: true}).click();
+  const intake = page.getByRole('dialog');
+  const name = intake.getByLabel('ชื่อ / ชื่อแสดง *', {exact: true});
+  await name.fill('ข้อมูลที่ยังไม่บันทึก');
+  const confirmation = page.waitForEvent('dialog');
+  // A dismissed beforeunload has no load event; bound the navigation wait so
+  // assertions still run on the original document instead of using the whole test timeout.
+  const reload = page.reload({timeout: 5000}).catch(() => null);
+  const prompt = await confirmation;
+  expect(prompt.type()).toBe('beforeunload');
+  await prompt.dismiss();
+  await reload;
+  await expect(intake).toBeVisible();
+  await expect(name).toHaveValue('ข้อมูลที่ยังไม่บันทึก');
+});
+
+test('admin UI activates plan, records report/addendum, completes appointment and closes/reopens',async({page})=>{
+  test.setTimeout(120000);
+  await signIn(page,'admin-a@integration.local');
+  const reference=await (await page.request.get('/api/reference-data')).json();
+  const name=`Workflow ${Date.now()}`;
+  const intake=await page.request.post('/api/intake',{data:{requestId:crypto.randomUUID(),mode:'case',patientDecision:{kind:'create',patient:{fullName:name,socialPlatform:'line_oa',socialAccount:name,contactPermission:'granted'}},case:{title:'Contract workflow',serviceId:reference.services[0].id,assignedTo:reference.nurses[0].user_id}}});
+  expect(intake.status(),await intake.text()).toBe(201);const created=await intake.json();
+  await page.reload();await page.getByRole('button',{name:'ลีด / ผู้ป่วย',exact:true}).click();await page.getByLabel('ค้นหาบุคคล').fill(name);
+  await page.getByRole('button',{name:new RegExp(name)}).click();await page.getByRole('button',{name:'เปิดเคส 1',exact:true}).click();
+  await page.getByRole('button',{name:'เริ่มรอบแผน',exact:true}).click();const dialog=page.getByRole('dialog',{name:'จัดการเคส'});
+  await dialog.getByLabel('วันเกิดเหตุการณ์จริง',{exact:true}).fill('2026-09-20');
+  await dialog.getByLabel('Nurse ผู้ยืนยัน / ให้คำสั่ง').selectOption(reference.nurses[0].user_id);
+  await dialog.getByLabel('คำสั่ง / เหตุผลเริ่มแผน').fill('ตามรายงาน Nurse ทดสอบ');await dialog.getByRole('button',{name:'ยืนยันบันทึก'}).click();await expect(dialog).not.toBeVisible();
+  await page.getByRole('button',{name:'บันทึกผล',exact:true}).first().click();
+  await dialog.getByLabel('วันเวลาเกิดเหตุการณ์ · เวลาไทย').fill('2026-09-25T09:00');
+  await dialog.getByLabel('ผลลัพธ์',{exact:true}).fill('ติดตามสำเร็จทดสอบ');await dialog.getByLabel('สรุปที่ใช้ประสานงานได้').fill('นัดประเมินต่อ');await dialog.getByLabel('Nurse ผู้รายงาน').selectOption(reference.nurses[0].user_id);
+  await dialog.getByRole('button',{name:'ยืนยันบันทึก'}).click();await expect(dialog).not.toBeVisible();await expect(page.getByText('ติดตามสำเร็จทดสอบ',{exact:false})).toBeVisible();
+  await page.getByRole('button',{name:'เพิ่มคำแก้ไข (เก็บต้นฉบับ)',exact:true}).first().click();await dialog.getByLabel('สรุปเพิ่มเติม / แก้ไข').fill('เพิ่มเติมข้อมูลประสานงาน');await dialog.getByLabel('เหตุผล / รายละเอียด').fill('แก้คำสะกด');await dialog.getByRole('button',{name:'ยืนยันบันทึก'}).click();await expect(dialog).not.toBeVisible();await expect(page.getByText('เพิ่มเติมข้อมูลประสานงาน',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'เพิ่มนัดหมาย',exact:true}).click();await dialog.getByLabel('ประเภทนัด').fill('ประเมินหลังทำ');await dialog.getByLabel('เริ่ม · เวลาไทย',{exact:true}).fill('2026-10-01T10:00');await dialog.getByLabel('สิ้นสุด · เวลาไทย').fill('2026-10-01T10:30');await dialog.getByRole('button',{name:'ยืนยันบันทึก'}).click();await expect(dialog).not.toBeVisible();
+  await page.getByRole('button',{name:'เลื่อน / เปลี่ยนสถานะ'}).click();await dialog.getByLabel('สถานะ',{exact:true}).selectOption('completed');await dialog.getByLabel('เหตุผล / รายละเอียด').fill('มาตามนัดทดสอบ');await dialog.getByRole('button',{name:'ยืนยันบันทึก'}).click();await expect(dialog).not.toBeVisible();
+  let detail=await (await page.request.get(`/api/cases/${created.case.id}`)).json();
+  expect(detail.results).toHaveLength(2);expect(detail.results.filter((r:{corrects_result_id:string|null})=>r.corrects_result_id)).toHaveLength(1);
+  expect(detail.appointments[0].status).toBe('completed');expect(detail.tasks.filter((t:{status:string})=>t.status==='completed')).toHaveLength(1);
+  const denied=await page.request.post(`/api/cases/${created.case.id}/lifecycle`,{data:{action:'close',reason:'other: review',expectedRevision:detail.case.revision}});expect(denied.status()).toBe(409);
+  for(const task of detail.tasks.filter((t:{status:string})=>t.status==='pending'))expect((await page.request.patch(`/api/follow-up-tasks/${task.id}`,{data:{status:'cancelled',reason:'ทบทวนงานและยุติตามคำสั่งสำหรับเคสทดสอบ'}})).ok()).toBe(true);
+  await page.getByRole('button',{name:'ปิดเคส',exact:true}).click();await dialog.getByLabel('เหตุผลปิด',{exact:true}).selectOption('other');await dialog.getByLabel('เหตุผล / รายละเอียด').fill('ตรวจงานค้างครบ');await dialog.getByRole('button',{name:'ยืนยันบันทึก'}).click();await expect(dialog).not.toBeVisible();
+  await page.getByRole('button',{name:'เปิดเคสกลับ',exact:true}).click();await dialog.getByLabel('เหตุผล / รายละเอียด').fill('รับเรื่องต่อ');await dialog.getByRole('button',{name:'ยืนยันบันทึก'}).click();await expect(dialog).not.toBeVisible();
+  detail=await (await page.request.get(`/api/cases/${created.case.id}`)).json();expect(detail.case.lifecycle).toBe('open');expect(detail.tasks.filter((t:{status:string})=>t.status==='cancelled')).toHaveLength(4);
+  await page.screenshot({path:'test-results/contract-desktop-workflow.png',fullPage:true});
+});

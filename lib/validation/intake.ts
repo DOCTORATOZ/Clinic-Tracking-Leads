@@ -28,23 +28,23 @@ export const intakePatientSchema = z.object({
 export const intakeCaseSchema = z.object({
   title: z.string().trim().min(1, 'ระบุหัวข้อหรือเหตุผลที่ติดต่อ').max(200),
   coordinationNote: optionalText(5000),
-  sourceId: z.string().uuid().optional(),
-  serviceId: z.string().uuid().optional(),
-  planId: z.string().uuid().optional(),
+  sourceId: z.uuid().optional(),
+  serviceId: z.uuid().optional(),
+  planId: z.uuid().optional(),
   planOverrideReason: optionalText(1000),
-  assignedTo: z.string().uuid().optional(),
+  assignedTo: z.uuid().optional(),
   priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
 });
 
 export const intakeSchema = z.object({
-  requestId: z.string().uuid(),
+  requestId: z.uuid(),
   mode: z.enum(['lead', 'case']),
   patientDecision: z.discriminatedUnion('kind', [
     z.object({ kind: z.literal('create'), patient: intakePatientSchema, duplicateReason: optionalText(1000) }),
-    z.object({ kind: z.literal('link'), patientId: z.string().uuid() }),
+    z.object({ kind: z.literal('link'), patientId: z.uuid() }),
   ]),
-  ownerId: z.string().uuid().optional(), // Resolved to authenticated recorder on the server.
-  nextContactAt: z.string().datetime({ offset: true }).optional(),
+  ownerId: z.uuid().optional(), // Resolved to authenticated recorder on the server.
+  nextContactAt: z.iso.datetime({ offset: true }).optional(),
   case: intakeCaseSchema.optional(),
 }).superRefine((value, ctx) => {
   if (value.mode === 'lead' && !value.nextContactAt) ctx.addIssue({ code: 'custom', path: ['nextContactAt'], message: 'ระบุวันติดต่อต่อไป' });

@@ -1,18 +1,18 @@
 import { z } from 'zod';
 
-const id = z.string().uuid();
+const id = z.uuid();
 
 export const createPatientSchema = z.object({
   fullName: z.string().trim().min(1).max(200),
   hn: z.string().trim().max(80).optional(),
   phone: z.string().trim().max(40).optional(),
-  email: z.string().email().optional(),
-  birthDate: z.string().date().optional(),
+  email: z.email().optional(),
+  birthDate: z.iso.date().optional(),
   preferredContactChannel: z.enum(['phone', 'line_oa', 'facebook', 'tiktok', 'other']).optional(),
   doNotContact: z.boolean().default(false),
-  careContactConsentAt: z.string().datetime().optional(),
+  careContactConsentAt: z.iso.datetime().optional(),
   // Marketing consent is deliberately not collected by the Phase 1 intake UI.
-  marketingConsentAt: z.string().datetime().optional(),
+  marketingConsentAt: z.iso.datetime().optional(),
 });
 
 export const patientMatchSchema = z.object({
@@ -27,7 +27,7 @@ export const createCaseSchema = z.object({
   ]),
   sourceId: id.optional(),
   serviceId: id.optional(),
-  sourceReceivedAt: z.string().datetime(),
+  sourceReceivedAt: z.iso.datetime(),
   concern: z.string().trim().max(5000).optional(),
   priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
   assignedTo: id.optional(),
@@ -36,8 +36,9 @@ export const createCaseSchema = z.object({
 });
 
 export const recordFollowUpResultSchema = z.object({
+  requestId: id,
   taskId: id,
-  occurredAt: z.string().datetime(),
+  occurredAt: z.iso.datetime(),
   contactChannel: z.enum(['phone', 'line_oa', 'facebook', 'tiktok', 'other']),
   contactStatus: z.enum(['contacted', 'no_answer', 'wrong_number', 'declined']),
   outcome: z.string().trim().min(1).max(100),
@@ -47,25 +48,30 @@ export const recordFollowUpResultSchema = z.object({
   nextAction: z.string().trim().max(1000).optional(),
   performedBy: id.optional(),
   reportedBy: id.optional(),
-  retryDueAt: z.string().datetime().optional(),
+  retryDueAt: z.iso.datetime().optional(),
+  retryReason: z.string().trim().min(1).optional(),
+  retryAssignedTo:id.optional(),
+  appointment: z.object({ startsAt: z.iso.datetime(), endsAt: z.iso.datetime(), appointmentType: z.string().trim().min(1), branch: z.string().optional(), providerName: z.string().optional(), reason: z.string().optional() }).optional(),
 });
 
 export const createAppointmentSchema = z.object({
+  requestId: id,
   caseId: id,
   sourceResultId: id.optional(),
-  startsAt: z.string().datetime(),
-  endsAt: z.string().datetime().optional(),
+  startsAt: z.iso.datetime(),
+  endsAt: z.iso.datetime(),
   appointmentType: z.string().trim().min(1).max(200),
   branch: z.string().trim().max(200).optional(),
   providerName: z.string().trim().max(200).optional(),
-});
+  reason: z.string().trim().max(1000).optional(),
+}).refine(value => new Date(value.endsAt) > new Date(value.startsAt), { path: ['endsAt'], message: 'เวลาสิ้นสุดต้องหลังเวลาเริ่ม' });
 
 export const transitionAppointmentSchema = z.object({
   appointmentId: id,
   status: z.enum(['scheduled', 'completed', 'rescheduled', 'cancelled', 'no_show']),
   reason: z.string().trim().min(1).max(1000),
-  startsAt: z.string().datetime().optional(),
-  endsAt: z.string().datetime().optional(),
+  startsAt: z.iso.datetime().optional(),
+  endsAt: z.iso.datetime().optional(),
 });
 
 export type CreateCaseInput = z.infer<typeof createCaseSchema>;
